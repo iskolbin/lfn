@@ -137,7 +137,7 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
-	copy = function( iarray, f )
+	copy = function( iarray )
 		local oarray = {}
 		for i = 1, #iarray do
 			oarray[i] = iarray[i]
@@ -145,9 +145,9 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
-	sort = function( iarray, f )
+	sort = function( iarray, cmp )
 		local oarray = iarray:copy()
-		table.sort( oarray, f )
+		table.sort( oarray, cmp )
 		return oarray
 	end,
 
