@@ -137,12 +137,12 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
-	copy = function( iarray )
-		local oarray = {}
-		for i = 1, #iarray do
-			oarray[i] = iarray[i]
+	copy = function( itable )
+		local otable = {}
+		for k, v in pairs( itable ) do
+			otable[k] = v
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( otable, FnMT )
 	end,
 
 	sort = function( iarray, cmp )
