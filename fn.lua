@@ -72,6 +72,17 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
+	append = function( iarray, toappend )
+		local oarray, n = {}, #iarray
+		for i = 1, n do
+			oarray[i] = iarray[i]
+		end
+		for i = 1, #toappend do
+			oarray[n+i] = toappend[i]
+		end
+		return setmetatable( oarray, FnMT )
+	end,
+
 	count = function( iarray, p )
 		local n = 0
 		for i = 1, #iarray do
