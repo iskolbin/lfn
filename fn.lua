@@ -3,7 +3,7 @@ local FnMt
 local FnMtCache = setmetatable( {}, {__mode = 'k'} )
 local FnRest = {'...'}
 local FnWild = {'_'}
-local FnOpCache = {}
+local FnOpCache = setmetatable( {}, {__mode = 'kv'} )
 
 Fn = {
 	returnmt = function( table )
