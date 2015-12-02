@@ -1,17 +1,10 @@
 local Fn
 local FnMt
-local FnMtCache = setmetatable( {}, {__mode = 'k'} )
 local FnRest = {'...'}
 local FnWild = {'_'}
 local FnOpCache = setmetatable( {}, {__mode = 'kv'} )
 
 Fn = {
-	returnmt = function( table )
-		setmetatable( table, FnMtCache[table] )
-		FnMtCache[table] = nil
-		return table
-	end,
-
 	each = function( iarray, f, mode )
 		for i = 1, #iarray do
 			f( iarray[i] ) 
@@ -42,7 +35,10 @@ Fn = {
 	
 	shuffle = function( iarray, rand )
 		local rand = rand or math.random
-		local oarray = iarray:copy()
+		local oarray = {}
+		for i = 1, #iarray do
+			oarray[i] = iarray[i]
+		end
 		for i = #iarray, 1, -1 do
 			local j = rand( i )
 			oarray[j], oarray[i] = oarray[i], oarray[j]
@@ -72,13 +68,34 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
-	append = function( iarray, toappend )
-		local oarray, n = {}, #iarray
-		for i = 1, n do
-			oarray[i] = iarray[i]
+	insert = function( iarray, toinsert, pos )
+		local n, m, oarray = #iarray, #toinsert, {}
+		local pos = pos or n+1
+		pos = pos < 0 and n + pos + 2 or pos, n
+		if pos <= 1 then
+			for i = 1, m do oarray[i] = toinsert[i] end
+			for i = 1, n do oarray[m+i] = iarray[i] end
+		elseif pos > n then
+			for i = 1, n do oarray[i] = iarray[i] end
+			for i = 1, m do oarray[i+n] = toinsert[i] end
+		else
+			for i = 1, pos-1 do oarray[i] = iarray[i] end
+			for i = 1, m do oarray[i+pos-1] = toinsert[i] end
+			for i = pos, n do oarray[i+m] = iarray[i] end
 		end
-		for i = 1, #toappend do
-			oarray[n+i] = toappend[i]
+		return setmetatable( oarray, FnMT )
+	end,
+
+	partition = function( iarray, p )
+		local oarray, j, k = {setmetatable({}, FnMT),setmetatable({}, FnMT)}, 0, 0
+		for i = 1, #iarray do
+			if p( iarray[i] ) then
+				j = j + 1
+				oarray[1][j] = iarray[i]
+			else
+				k = k + 1
+				oarray[2][k] = iarray[i]
+			end
 		end
 		return setmetatable( oarray, FnMT )
 	end,
@@ -157,9 +174,12 @@ Fn = {
 	end,
 
 	sort = function( iarray, cmp )
-		local oarray = iarray:copy()
+		local oarray = {}
+		for i = 1, #iarray do
+			oarray[i] = iarray[i]
+		end
 		table.sort( oarray, cmp )
-		return oarray
+		return setmetatable( oarray, FnMT )
 	end,
 
 	indexof = function( iarray, v, cmp )
@@ -275,7 +295,13 @@ Fn = {
 		end
 	end,
 
-	join = table.concat,
+	concat = table.concat,
+
+	setmetatable = setmetatable,
+	
+	length = function( itable ) 
+		return #itable 
+	end,
 
 	tostring = function( arg, saved, ident )
 		local t = type( arg )
@@ -409,7 +435,6 @@ return function( tbl, ... )
 	if t == 'string' then
 		return Fn.Op[tbl]
 	elseif t == 'table' then	
-		FnMtCache[tbl] = getmetatable( tbl )
 		return setmetatable( tbl, FnMT )
 	elseif t == 'number' then
 		return range( tbl, ... )
