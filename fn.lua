@@ -299,9 +299,7 @@ Fn = {
 
 	setmetatable = setmetatable,
 	
-	length = function( itable ) 
-		return #itable 
-	end,
+	length = function( itable ) return #itable end,
 
 	tostring = function( arg, saved, ident )
 		local t = type( arg )
