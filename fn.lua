@@ -3,6 +3,8 @@ local FnMt
 local FnRest = {'...'}
 local FnWild = {'_'}
 local FnOpCache = setmetatable( {}, {__mode = 'kv'} )
+local load = load or loadstring
+local unpack = table.unpack or unpack
 
 Fn = {
 	each = function( iarray, f, mode )
@@ -346,7 +348,6 @@ FnMT = {
 	__index = Fn
 }
 
-local unpack = unpack or table.unpack
 
 Fn.Op = {
 	['neg'] = function( a ) return -a end,
@@ -367,10 +368,10 @@ Fn.Op = {
 	['<'] = function( a, b ) return a < b end,
 	['<='] = function( a, b ) return a <= b end,
 	['=='] = function( a, b ) return a == b end,
-	['==='] = function( a, b ) return Fn.equal( a, b ) end, 
 	['~='] = function( a, b ) return a ~= b end,
 	['>'] = function( a, b ) return a > b end,
 	['>='] = function( a, b ) return a >= b end,
+	['equal?'] = function( a, b ) return Fn.equal( a, b ) end, 
 	['nil?'] = function( a ) return a == nil end,
 	['zero?'] = function( a ) return a == 0 end,
 	['positive?'] = function( a ) return a > 0 end,
@@ -402,7 +403,7 @@ local FnOpMT = {
 	__index = function( self, k )
 		local f = FnOpCache[k]
 		if not f then
-			f = assert(loadstring( 'return function(x,y,z,a,b,c) return ' .. k .. ' end' ))()
+			f = assert(load( 'return function(x,y,z,a,b,c) return ' .. k .. ' end' ))()
 			FnOpCache[k] = f
 		end
 		return f
