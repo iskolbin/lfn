@@ -23,9 +23,9 @@ fn.reverse{1,2,3} -- {3,2,1}
 Stream iterators
 ----------------
 * range( from, ?to, ?step ) -> iterator returning values in range
-* enumerate( array ) -> iterator returning value
+* iter( array ) -> iterator returning value
 * ipairs( array ) -> iterator returning pair index, value
-* renumerate( arary ) -> reverse iterartor returning value
+* riter( arary ) -> reverse iterartor returning value
 * ripairs( array ) -> reverse iterator returning pair index value
 * pairs( table ) -> iterator returning pair key, value
 * keys( table ) -> iterator returning key
