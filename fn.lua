@@ -398,6 +398,7 @@ Fn.Op = {
 	['table?'] = function( a ) return type( a ) == 'table' end,
 	['userdata?'] = function( a ) return type( a ) == 'userdata' end,
 	['thread?'] = function( a ) return type( a ) == 'thread' end,
+	['{...}'] = function( ... ) return {...} end,
 	['...'] = FnRest,
 	['_'] = FnWild,
 	['@'] = function( a, ... ) 
