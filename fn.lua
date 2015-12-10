@@ -88,6 +88,18 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
+	remove = function( iarray, toremove, cmp )
+		local oarray, j = {}, 0
+		for i = 1, #iarray do
+			local v = iarray[i]
+			if Fn.indexof( toremove, v, cmp ) == nil then
+				j = j + 1
+				oarray[j] = v
+			end
+		end
+		return setmetatable( oarray, FnMT )
+	end,
+
 	partition = function( iarray, p )
 		local oarray, j, k = {setmetatable({}, FnMT),setmetatable({}, FnMT)}, 0, 0
 		for i = 1, #iarray do
