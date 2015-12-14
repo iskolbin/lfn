@@ -1,19 +1,44 @@
-local unpack = table.unpack or unpack -- Lua 5.1 compatibility
-local setmetatable, select, next = setmetatable, select, next
+local load, unpack = load or loadstring, table.unpack or unpack -- Lua 5.1 compatibility
+local setmetatable, select, next, type, pairs, assert = setmetatable, select, next, type, pairs, assert
 
-local function reccall( self, i, status, ... )
-	if status then
-		if self[i] then
-			return reccall( self, i+2, self[i]( self[i+1], ... ))
-		else
-			return status,...
-		end
+local Wild = {}
+local Rest = {}
+
+local function equal( itable1, itable2 )
+	if itable1 == itable2 then
+		return true
 	else
-		return status
+		local t1, t2 = type( itable1 ), type( itable2 )
+		if t1 == t2 then
+			if itable2 == Wild or itable2 == Rest then
+				return true
+			elseif t1 == 'table' then
+				local n1 = 0; for _, _ in pairs( itable1 ) do n1 = n1 + 1 end
+				local n2 = 0; for _, _ in pairs( itable2 ) do n2 = n2 + 1 end
+				if n1 == n2 or itable2[#itable2] == Rest then
+					for k, v in pairs( itable2 ) do
+						if v == Wild or v == Rest then
+							return true
+						elseif itable1[k] == nil or not equal( itable1[k], v ) then
+							return false
+						end
+					end
+					return true
+				else
+					return false
+				end
+			end
+		else
+			return false
+		end
 	end
 end
 
-local Array = {
+local TableMt
+
+local Table = {
+	equal = equal,
+
 	sort = function( iarray, cmp )
 		table.sort( iarray, cmp )
 		return iarray
@@ -37,7 +62,7 @@ local Array = {
 	end,
 
 	copy = function( iarray )
-		local oarray = setmetatable( {}, ArrayMt )
+		local oarray = setmetatable( {}, TableMt )
 		for i = 1, #iarray do
 			oarray[i] = iarray[i]
 		end
@@ -52,7 +77,10 @@ local Array = {
 				end
 			end
 		else
-			assert( type( cmp ) == 'function', '3rd argument should be nil for linear search and comparator for binary search' )
+			if not type( cmp ) == 'function' then
+				error('bad argument #2 to indexof ( function expected for binary search, or nil for linear search )' )
+			end
+
 			local init, limit = 1, #iarray, 0
 			local floor = math.floor
 			while init <= limit do
@@ -65,9 +93,25 @@ local Array = {
 			end
 		end
 	end,
-}
+	
+	tcopy = function( itable )
+		local otable = setmetatable( {}, TableMt )
+		for k, v in pairs( itable ) do
+			otable[k] = v
+		end
+		return otable
+	end,
 
-local ArrayMt = { __index = Array }
+	keyof = function( itable, v_ )
+		for k, v in pairs( itable ) do
+			if v == v_ then
+				return k
+			end
+		end
+	end,
+	
+	concat = table.concat,
+}
 
 local Generator = {
 	apply = function( self, f, arg )
@@ -77,15 +121,15 @@ local Generator = {
 	end,
 	
 	map = function( self, f_ )
-		local function map( f, ... )
+		local function domap( f, ... )
 			return true, f( ... )
 		end
 
-		return self:apply( map, f_ )
+		return self:apply( domap, f_ )
 	end,
 	
 	filter = function( self, p_ )
-		local function filter( p, ... )
+		local function dofilter( p, ... )
 			if p( ... ) then
 				return true, ...
 			else
@@ -93,13 +137,13 @@ local Generator = {
 			end
 		end
 
-		return self:apply( filter, p_ )
+		return self:apply( dofilter, p_ )
 	end,
 
-	pack = function( self, from_ )
-		local function pack( from, k, v, ... )
-			if from <= 1 then return true, {...}
-			elseif from <= 2 then return true, k, {v,...}
+	zip = function( self, from_ )
+		local function dozip( from, k, v, ... )
+			if from <= 1 then return true, {k, v, ...}
+			elseif from <= 2 then return true, k, {v, ...}
 			elseif from <= 3 then return true, k, v, {...}
 			else
 				local allargs = {...}
@@ -109,19 +153,27 @@ local Generator = {
 			end
 		end
 
-		return self:apply( pack, from_ )
+		return self:apply( dozip, from_ or 1 )
 	end,
 
 	swap = function( self )
-		local function swap( _, x, y, ... )
+		local function doswap( _, x, y, ... )
 			return true, y, x, ...
 		end
 
-		return self:apply( swap, false )
+		return self:apply( doswap, false )
+	end,
+
+	dup = function( self )
+		local function dodup( _, x, ... )
+			return true, x, x, ...
+		end
+
+		return self:apply( dodup, false )
 	end,
 
 	unique = function( self )
-		local function unique( cache, k, ... )
+		local function dounique( cache, k, ... )
 			if not cache[k] then
 				cache[k] = true
 				return true, k, ...
@@ -130,23 +182,80 @@ local Generator = {
 			end
 		end
 		
-		return self:apply( unique, {} )
+		return self:apply( dounique, {} )
 	end,
 
-	update = function( self, table_ )
-		local function update( table, k, v, ... )
-			if table[k] then
-				return true, k, table[k], ...
-			else
-				return false, k, v, ...
+	withindex = function( self, init, step )
+		local function dowithindex( i, ... )
+			local index = i[1]
+			i[1] = index + i[2]
+			return true, index, ...
+		end
+
+		return self:apply( dowithindex, {init or 1, step or 1} )
+	end,
+
+	take = function( self, n_ )
+		local function dotake( n, ... )
+			if n[1] < n[2] then
+				n[1] = n[1] + 1
+				return true, ...
 			end
 		end
 
-		return self:apply( update, table_ )
+		return self:apply( dotake, {0, n_} )
+	end,
+
+	takewhile = function( self, p_ )
+		local function dotakewhile( p, ... )
+			if p( ... ) then
+				return true, ...
+			end
+		end
+
+		return self:apply( dotakewhile, p_ )
+	end,
+
+	drop = function( self, n_ )
+		local function dodrop( n, ... )
+			if n[1] < n[2] then
+				n[1] = n[1] + 1
+				return false
+			else
+				return true, ...
+			end
+		end
+	
+		return self:apply( dodrop, {0,n_} )
+	end,
+
+	dropwhile = function( self, p_ )
+		local function dodropwhile( p, ... )
+			if p[2] and p[1]( ... ) then
+				return false
+			else
+				p[2] = false
+				return true, ...
+			end
+		end
+
+		return self:apply( dodropwhile, {p_,true} )
+	end,
+
+	update = function( self, table_ )
+		local function doupdate( table, k, v, ... )
+			if table[k] then
+				return true, k, table[k], ...
+			else
+				return true, k, v, ...
+			end
+		end
+
+		return self:apply( doupdate, table_ )
 	end,
 
 	delete = function( self, table_ )
-		local function delete( table, k, ... )
+		local function dodelete( table, k, ... )
 			if not table[k] then
 				return true, k, ...
 			else
@@ -154,7 +263,7 @@ local Generator = {
 			end
 		end
 
-		return self:apply( delete, table_ )
+		return self:apply( dodelete, table_ )
 	end,
 
 	each = function( self, f )
@@ -199,10 +308,9 @@ local Generator = {
 			return acc
 		end
 
-		return self:reduce( arrayfold, setmetatable( {}, ArrayMt ) )
+		return self:reduce( arrayfold, setmetatable( {}, TableMt ) )
 	end,
 
-	
 	sum = function( self, acc_ )
 		local function dosum( acc, status, ... )
 			if status then
@@ -232,116 +340,97 @@ local Generator = {
 	end,
 
 	next = function( self )
-		return self[2]( self )
+		return self[1]( self )
 	end,
 }
 
 local GeneratorMt = {__index = Generator}
 
+local function reccall( self, i, status, ... )
+	if status then
+		if self[i] then
+			return reccall( self, i+2, self[i]( self[i+1], ... ))
+		else
+			return status, ...
+		end
+	else
+		return status
+	end
+end
+
 local function iternext( self )
-	local index = self[4] + 1
-	local value = self[3][index]
-	if value ~= nil then
-		self[4] = index
-		return reccall( self, 5, true, value ) 
+	local index = self[3]
+	local value = self[2][index]
+	if value ~= nil and index <= self[4] then
+		self[3] = index + self[5]
+		return reccall( self, 6, true, value ) 
 	end
 end
 
 local function ipairsnext( self )
-	local index = self[4] + 1
-	local value = self[3][index]
-	if value ~= nil then
-		self[4] = index
-		return reccall( self, 5, true, index, value ) 
+	local index = self[3]
+	local value = self[2][index]
+	if value ~= nil and index <= self[4] then
+		self[3] = index + self[5]
+		return reccall( self, 6, true, index, value ) 
 	end
 end
 
 local function riternext( self )
-	local index = self[4] - 1
-	local value = self[3][index]
-	if value ~= nil then
-		self[4] = index
-		return reccall( self, 5, true, value ) 
+	local index = self[3]
+	local value = self[2][index]
+	if value ~= nil and index >= self[4] then
+		self[3] = index + self[5]
+		return reccall( self, 6, true, value ) 
 	end
 end
 
 local function ripairsnext( self )
-	local index = self[4] - 1
-	local value = self[3][index]
-	if value ~= nil then
-		self[4] = index
-		return reccall( self, 5, true, index, value ) 
+	local index = self[3]
+	local value = self[2][index]
+	if value ~= nil and index >= self[4] then
+		self[3] = index + self[5]
+		return reccall( self, 6, true, index, value ) 
 	end
 end
 
 local function pairsnext( self )
-	local k, v = next( self[3], self[4] )
-	if k ~= nil then
-		self[4] = k
-		return reccall( self, 5, true, k, v )
+	local key, value = next( self[2], self.k )
+	if key ~= nil then
+		self.k = key
+		return reccall( self, 3, true, key, value )
 	end
 end
 
 local function keysnext( self )
-	local k, v = next( self[3], self[4] )
-	if k ~= nil then
-		self[4] = k
-		return reccall( self, 5, true, k )
+	local key, value = next( self[2], self.k )
+	if key ~= nil then
+		self.k = key
+		return reccall( self, 3, true, key )
 	end
 end
 
 local function valuesnext( self )
-	local k, v = next( self[3], self[4] )
-	if k ~= nil then
-		self[4] = k
-		return reccall( self, 5, true, v )
+	local key, value = next( self[2], self.k )
+	if key ~= nil then
+		self.k = key
+		return reccall( self, 3, true, value )
 	end
 end
 
 local function rangenext( self )
-	self[3] = self[3] + self[5]
-	if self[3] <= self[4] then
-		return reccall( self, 6, true, self[3] )
+	local index = self[2]
+	if index <= self[3] then
+		self[2] = index + self[4]
+		return reccall( self, 5, true, index )
 	end
 end
 
-local function invrangenext( self )
-	self[3] = self[3] + self[5]
-	if self[3] >= self[4] then
-		return reccall( self, 6, true, self[3] )
-	end
-end
-
-local Rest = {}
-local Wild = {}
-
-local function equal( itable1, itable2 )
-	if itable1 == itable2 then
-		return true
-	else
-		local t1, t2 = type( itable1 ), type( itable2 )
-		if t1 == t2 then
-			if itable2 == Wild or itable2 == Rest then
-				return true
-			elseif t1 == 'table' then
-				local n1 = 0; for _, _ in pairs( itable1 ) do n1 = n1 + 1 end
-				local n2 = 0; for _, _ in pairs( itable2 ) do n2 = n2 + 1 end
-				if n1 == n2 or itable2[#itable2] == Rest then
-					for k, v in pairs( itable2 ) do
-						if v == Wild or v == Rest then
-							return true
-						elseif itable1[k] == nil or not equal( itable1[k], v ) then
-							return false
-						end
-					end
-					return true
-				else
-					return false
-				end
-			end
-		else
-			return false
-		end
+local function rrangenext( self )
+	local index = self[2]
+	if index >= self[3] then
+		self[2] = index + self[4]
+		return reccall( self, 5, true, index )
 	end
 end
 
@@ -382,33 +471,65 @@ local Operators = {
 	['table?'] = function( a ) return type( a ) == 'table' end,
 	['userdata?'] = function( a ) return type( a ) == 'userdata' end,
 	['thread?'] = function( a ) return type( a ) == 'thread' end,
+	['_'] = Wild,
+	['...'] = Rest,
 }
 
-local StreamLibrary = {
-	_ = Wild,
-	___ = Rest,
+local function evalrangeargs( init, limit, step )
+	local init, limit, step = init, limit, step
+	if not limit then init, limit = init > 0 and 1 or -1, init end
+	if not step then step = init < limit and 1 or -1 end
+	if (init <= limit and step > 0) or (init >= limit and step < 0) then
+		return init, limit, step
+	else
+		error('bad initial variables for range')
+	end
+end
 
+local function evalsubargs( table, init, limit, step )
+	local len = #table
+	local init, limit, step = init or 1, limit or len, step
+	if init < 0 then init = len + init + 1 end
+	if limit < 0 then limit = len + init + 1 end
+	if not step then step = init < limit and 1 or -1 end
+	if (init <= limit and step > 0) or (init >= limit and step < 0) then
+		return init, limit, step
+	else
+		error('bad initial variables for generator')
+	end
+end
+
+local Stream = {
 	range = function( init, limit, step )
-		local init, limit, step = init, limit, step
-		if not limit then
-			init, limit = 1, init
-		end
-		if not step then
-			step = init < limit and 1 or -1
-		end
-		if init <= limit and step > 0 then
-			return setmetatable( {rangehasnext,rangenext,init-step,limit,step}, GeneratorMt )
-		elseif init >= limit and step < 0 then
-			return setmetatable( {invrangehasnext,invrangenext,init-step,limit,step}, GeneratorMt )
-		end
+		local init, limit, step = evalrangeargs( init, limit, step )
+		return setmetatable( {step > 0 and rangenext or rrangenext,init,limit,step}, GeneratorMt )
 	end,
-	iter = function( table ) return setmetatable( {iterhasnext,iternext,table,0}, GeneratorMt ) end,
-	ipairs = function( table ) return setmetatable( {iterhasnext,ipairsnext,table,0}, GeneratorMt ) end,
-	riter = function( table ) return setmetatable( {riterhasnext,riternext,table,#table+1}, GeneratorMt ) end,
-	ripairs = function( table ) return setmetatable( {riterhasnext,ripairsnext,table,#table+1}, GeneratorMt ) end,
-	pairs = function( table ) return setmetatable( {pairshasnext,pairsnext,table}, GeneratorMt ) end,
-	keys = function( table ) return setmetatable( {pairshasnext,keysnext,table}, GeneratorMt ) end,
-	values = function( table ) return setmetatable( {pairshasnext,valuesnext,table}, GeneratorMt ) end,
+
+	iter = function( table, init, limit, step )
+		local init, limit, step = evalsubargs( table, init, limit, step )
+		return setmetatable( {step > 0 and iternext or riternext,table,init,limit,step}, GeneratorMt ) 
+	end,
+	
+	ipairs = function( table, init, limit, step ) 
+		local init, limit, step = evalsubargs( table, init, limit, step )
+		return setmetatable( {step > 0 and ipairsnext or ripairsnext,table,init,limit,step}, GeneratorMt ) 
+	end,
+	
+	pairs = function( table ) 
+		return setmetatable( {pairsnext,table}, GeneratorMt )
+	end,
+	
+	keys = function( table ) 
+		return setmetatable( {keysnext,table}, GeneratorMt ) 
+	end,
+	
+	values = function( table ) 
+		return setmetatable( {valuesnext,table}, GeneratorMt )
+	end,
+
+	wrap = function( table )
+		return setmetatable( table, TableMt )
+	end,
 }
 
 local LambdaCache = setmetatable( {}, {__mode = 'kv'} )
@@ -422,6 +543,10 @@ local function lambda( self, k )
 	return f
 end
 
-return setmetatable( StreamLibrary, {
+TableMt = { __index = Table }
+
+setmetatable( Table, {__index = Stream} )
+
+return setmetatable( Stream, {
 	__call = lambda,
 } )
