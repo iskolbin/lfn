@@ -362,7 +362,7 @@ FnMT = {
 
 
 Fn.Op = {
-	['neg'] = function( a ) return -a end,
+	['~'] = function( a ) return -a end,
 	['+'] = function( a, b ) return a + b end,
 	['-'] = function( a, b ) return a - b end,
 	['*'] = function( a, b ) return a * b end,
