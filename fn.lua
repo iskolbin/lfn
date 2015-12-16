@@ -1,10 +1,93 @@
 local Fn
 local FnMt
-local FnRest = {'...'}
-local FnWild = {'_'}
 local FnOpCache = setmetatable( {}, {__mode = 'kv'} )
-local load = load or loadstring
-local unpack = table.unpack or unpack
+local load, unpack = load or loadstring, table.unpack or unpack
+local setmetatable, getmetatable, type, pairs = setmetatable, getmetatable, type, pairs
+
+local Wild = {}
+local Rest = {}
+local Var = {}
+local RestVar = {}
+
+local function equal( itable1, itable2, matchtable )
+	if itable1 == itable2 or itable2 == Wild or itable2 == Rest then
+		return true
+	elseif getmetatable( itable2 ) == Var then
+		matchtable[itable2[1]] = itable1
+		return true
+	else
+		local t1, t2 = type( itable1 ), type( itable2 )
+		if t1 == t2 and t1 == 'table' then
+			local n1 = 0; for _, _ in pairs( itable1 ) do n1 = n1 + 1 end
+			local n2 = 0; for _, _ in pairs( itable2 ) do n2 = n2 + 1 end
+			local last2 = itable2[#itable2]
+			local mt2 = getmetatable( last2 )
+			if n1 == n2 or last2 == Rest or mt2 == RestVar then
+				for k, v in pairs( itable2 ) do
+					if v == Rest then
+						return true
+					elseif getmetatable( v ) == RestVar then
+						local rest = {itable1[k]}
+						for _, v_ in next, itable1, k do
+							rest[#rest+1] = v_
+						end
+						matchtable[v[1]] = rest
+						return true
+					elseif itable1[k] == nil or not equal( itable1[k], v, matchtable ) then
+						return false
+					end
+				end
+				return true
+			else
+				return false
+			end
+		else
+			return false
+		end
+	end
+end
+
+local function tostring_( arg, saved, ident )
+	local t = type( arg )
+	local saved, ident = saved or {n = 0, recursive = {}}, ident or 0
+	if t == 'nil' or t == 'boolean' or t == 'number' or t == 'function' or t == 'userdata' or t == 'thread' then
+		return tostring( arg )
+	elseif t == 'string' then
+		return ('%q'):format( arg )
+	else
+		if saved[arg] then
+			saved.recursive[arg] = true
+			return '<table rec:' .. saved[arg] .. '>'
+		else
+			saved.n = saved.n + 1
+			saved[arg] = saved.n
+			local mt = getmetatable( arg )
+			if mt ~= nil and mt.__tostring then
+				return mt.__tostring( arg )
+			else
+				local ret = {}
+				local na = #arg
+				for i = 1, na do
+					ret[i] = tostring_( arg[i], saved, ident )
+				end
+				local tret = {}
+				local nt = 0					
+				for k, v in pairs(arg) do
+					if not ret[k] then
+						nt = nt + 1
+						tret[nt] = (' '):rep(ident+1) .. tostring_( k, saved, ident + 1 ) .. ' => ' .. tostring_( v, saved, ident + 1 )
+					end
+				end
+				local retc = table.concat( ret, ',' )
+				local tretc = table.concat( tret, ',\n' )
+				if tretc ~= '' then
+					tretc = '\n' .. tretc
+				end
+				return '{' .. retc .. ( retc ~= '' and tretc ~= '' and ',' or '') .. tretc .. (saved.recursive[arg] and (' <' .. saved[arg] .. '>}') or '}' )
+			end
+		end
+	end
+end
 
 Fn = {
 	each = function( iarray, f, mode )
@@ -27,8 +110,8 @@ Fn = {
 		return acc
 	end,
 	
-	sum = function( iarray )
-		local acc = 0
+	sum = function( iarray, acc )
+		local acc = acc or 0
 		for i = 1, #iarray do
 			acc = iarray[i] + acc
 		end
@@ -283,83 +366,29 @@ Fn = {
 		return n
 	end,
 
-	equal = function( itable1, itable2 )
-		local t1, t2 = type( itable1 ), type( itable2 )
-		if t1 == t2 then
-			if itable1 == itable2 or itable2 == FnWild or itable2 == FnRest then
-				return true
-			elseif t1 == 'table' then
-				local n1 = 0; for _, _ in pairs( itable1 ) do n1 = n1 + 1 end
-				local n2 = 0; for _, _ in pairs( itable2 ) do n2 = n2 + 1 end
-				if n1 == n2 or itable2[#itable2] == FnRest then
-					for k, v in pairs( itable2 ) do
-						if v == FnWild or v == FnRest then
-							return true
-						elseif itable1[k] == nil or not Fn.equal( itable1[k], v ) then
-							return false
-						end
-					end
-					return true
-				else
-					return false
-				end
-			end
-		else
-			return false
-		end
+	length = function( itable ) 
+		return #itable 
 	end,
-
-	concat = table.concat,
-
-	setmetatable = setmetatable,
 	
-	length = function( itable ) return #itable end,
-
-	tostring = function( arg, saved, ident )
-		local t = type( arg )
-		local saved, ident = saved or {}, ident or 0
-		if t == 'nil' or t == 'boolean' or t == 'number' or t == 'function' or t == 'userdata' or t == 'thread' then
-			return tostring( arg )
-		elseif t == 'string' then
-			return ('%q'):format( arg )
+	match = function( a, b )
+		acc = setmetatable( {}, TableMt )
+		local result = equal( a, b, acc ) 
+		if result then
+			return acc
 		else
-			if saved[arg] then
-				return '__REC__'
-			else
-				saved[arg] = arg
-				local mt = getmetatable( arg )
-				if mt ~= nil and mt.__tostring then
-					return mt.__tostring( arg )
-				else
-					local ret = {}
-					local na = #arg
-					for i = 1, na do
-						ret[i] = Fn.tostring( arg[i], saved, ident )
-					end
-					local tret = {}
-					local nt = 0
-					for k, v in pairs(arg) do
-						if not ret[k] then
-							nt = nt + 1
-							tret[nt] = (' '):rep(ident+1) .. Fn.tostring( k, saved, ident + 1 ) .. ' => ' .. Fn.tostring( v, saved, ident + 1 )
-						end
-					end
-					local retc = table.concat( ret, ',' )
-					local tretc = table.concat( tret, ',\n' )
-					if tretc ~= '' then
-						tretc = '\n' .. tretc
-					end
-					return '{' .. retc .. ( retc ~= '' and tretc ~= '' and ',' or '') .. tretc .. '}'
-				end
-			end
+			return result
 		end
 	end,
+	
+	equal = equal,
+	concat = table.concat,
+	setmetatable = setmetatable,
+	tostring = tostring_,
 }
 
 FnMT = {
 	__index = Fn
 }
-
 
 Fn.Op = {
 	['~'] = function( a ) return -a end,
@@ -399,24 +428,22 @@ Fn.Op = {
 	['userdata?'] = function( a ) return type( a ) == 'userdata' end,
 	['thread?'] = function( a ) return type( a ) == 'thread' end,
 	['{...}'] = function( ... ) return {...} end,
-	['...'] = FnRest,
-	['_'] = FnWild,
-	['@'] = function( a, ... ) 
-		local n = select( '#', ... )
-		if n == 0 then return a
-		elseif n == 1 then local x = ...; return function(b) return a(b,x) end
-		elseif n == 2 then local x,y = ...; return function(b) return a(b,x,y) end
-		elseif n == 3 then local x,y,z = ...; return function(b) return a(b,x,y,z) end
-		else local args = {...}; return function(b) return a(b,unpack(args)) end
-		end
-	end, 
+	['...'] = Rest,
+	['_'] = Wild,
+	['$'] = function( a ) return setmetatable( {a}, Var ) end,
+	['...$'] = function( a ) return setmetatable( {a}, RestVar ) end,
 }
+
+Fn.Op.X = Fn.Op['$']('X')
+Fn.Op.Y = Fn.Op['$']('Y')
+Fn.Op.Z = Fn.Op['$']('Z')
+Fn.Op.R = Fn.Op['...$']('R')
 
 local FnOpMT = {
 	__index = function( self, k )
 		local f = FnOpCache[k]
 		if not f then
-			f = assert(load( 'return function(x,y,z,a,b,c) return ' .. k .. ' end' ))()
+			f = assert(load( 'return function(x,y,z,...) return ' .. k .. ' end' ))()
 			FnOpCache[k] = f
 		end
 		return f
