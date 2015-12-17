@@ -56,7 +56,6 @@ local function tostring_( arg, saved, ident )
 		return ('%q'):format( arg )
 	else
 		if saved[arg] then
-			saved.recursive[arg] = true
 			return '<table rec:' .. saved[arg] .. '>'
 		else
 			saved.n = saved.n + 1
@@ -83,7 +82,7 @@ local function tostring_( arg, saved, ident )
 				if tretc ~= '' then
 					tretc = '\n' .. tretc
 				end
-				return '{' .. retc .. ( retc ~= '' and tretc ~= '' and ',' or '') .. tretc .. (saved.recursive[arg] and (' <' .. saved[arg] .. '>}') or '}' )
+				return '{' .. retc .. ( retc ~= '' and tretc ~= '' and ',' or '') .. tretc .. '|' .. saved[arg] .. '}'
 			end
 		end
 	end
@@ -193,6 +192,24 @@ Fn = {
 				k = k + 1
 				oarray[2][k] = iarray[i]
 			end
+		end
+		return setmetatable( oarray, FnMT )
+	end,
+
+	flatten = function( iarray )
+		local function doFlatten( t, v, index )
+			if type( v ) == 'table' then
+				for k = 1, #v do index = doFlatten( t, v[k], index ) end
+			else
+				index = index + 1
+				t[index] = v
+			end
+			return index
+		end
+
+		local oarray, j = {}, 0
+		for i = 1, #iarray do 
+			j = doFlatten( oarray, iarray[i], j ) 
 		end
 		return setmetatable( oarray, FnMT )
 	end,
@@ -382,6 +399,7 @@ Fn = {
 	
 	equal = equal,
 	concat = table.concat,
+	unpack = unpack,
 	setmetatable = setmetatable,
 	tostring = tostring_,
 }
