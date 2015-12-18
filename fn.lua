@@ -279,7 +279,15 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
-	copy = function( itable )
+	copy = function( iarray )
+		local oarray = {}
+		for i = 1, #iarray do
+			oarray[i] = iarray[i]
+		end
+		return setmetatable( oarray, FnMT )
+	end,
+
+	tcopy = function( itable )
 		local otable = {}
 		for k, v in pairs( itable ) do
 			otable[k] = v
@@ -288,12 +296,9 @@ Fn = {
 	end,
 
 	sort = function( iarray, cmp )
-		local oarray = {}
-		for i = 1, #iarray do
-			oarray[i] = iarray[i]
-		end
+		local oarray = Fn.copy( iarray )
 		table.sort( oarray, cmp )
-		return setmetatable( oarray, FnMT )
+		return oarray
 	end,
 
 	indexof = function( iarray, v, cmp )
@@ -344,22 +349,20 @@ Fn = {
 		return setmetatable( otable, FnMT )
 	end,
 
-	update = function( itable, utable, darray )
-		local otable = {}
-		for k, v in pairs( itable ) do
-			otable[k] = itable[k]
+	update = function( itable, utable )
+		local otable = Fn.tcopy( itable )
+		for k, v in pairs( utable ) do
+			otable[k] = v
 		end
-		if utable then
-			for k, v in pairs( utable ) do
-				otable[k] = v
-			end
+		return otable
+	end,
+
+	delete = function( itable, dtable )
+		local otable = Fn.tcopy( itable )
+		for k, v in pairs( dtable ) do
+			otable[v] = nil
 		end
-		if darray then
-			for i = 1, #darray do
-				otable[darray[i]] = nil
-			end
-		end
-		return setmetatable( otable, FnMT )
+		return otable
 	end,
 
 	unique = function( iarray )
@@ -402,6 +405,10 @@ Fn = {
 	unpack = unpack,
 	setmetatable = setmetatable,
 	tostring = tostring_,
+
+	pack = table.pack or function(...) return {...} end,
+	var = function( a ) return setmetatable( {a}, Var ) end,
+	restvar = function( a ) return setmetatable( {a}, RestVar ) end,
 }
 
 FnMT = {
@@ -430,7 +437,6 @@ Fn.Op = {
 	['~='] = function( a, b ) return a ~= b end,
 	['>'] = function( a, b ) return a > b end,
 	['>='] = function( a, b ) return a >= b end,
-	['equal?'] = function( a, b ) return Fn.equal( a, b ) end, 
 	['nil?'] = function( a ) return a == nil end,
 	['zero?'] = function( a ) return a == 0 end,
 	['positive?'] = function( a ) return a > 0 end,
@@ -445,17 +451,14 @@ Fn.Op = {
 	['table?'] = function( a ) return type( a ) == 'table' end,
 	['userdata?'] = function( a ) return type( a ) == 'userdata' end,
 	['thread?'] = function( a ) return type( a ) == 'thread' end,
-	['{...}'] = function( ... ) return {...} end,
 	['...'] = Rest,
 	['_'] = Wild,
-	['$'] = function( a ) return setmetatable( {a}, Var ) end,
-	['...$'] = function( a ) return setmetatable( {a}, RestVar ) end,
 }
 
-Fn.Op.X = Fn.Op['$']('X')
-Fn.Op.Y = Fn.Op['$']('Y')
-Fn.Op.Z = Fn.Op['$']('Z')
-Fn.Op.R = Fn.Op['...$']('R')
+Fn.Op.X = Fn.var'X'
+Fn.Op.Y = Fn.var'Y'
+Fn.Op.Z = Fn.var'Z'
+Fn.Op.R = Fn.restvar'R'
 
 local FnOpMT = {
 	__index = function( self, k )
