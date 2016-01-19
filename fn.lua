@@ -88,6 +88,17 @@ local function tostring_( arg, saved, ident )
 	end
 end
 
+local function ltall( a, b )
+	local t1, t2 = type( a ), type( b )
+	if t1 == t2 and (t1 == 'number' or t1 == 'string') then
+		return a < b
+	elseif t1 ~= t2 then
+		return t1 < t2
+	else
+		return tostring( a ) < tostring( b )
+	end
+end
+
 Fn = {
 	each = function( iarray, f, mode )
 		for i = 1, #iarray do
@@ -331,6 +342,20 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
+	sortedpairs = function( itable, lt )
+		local oarray, i = {}, 0
+		for k, v in pairs( itable ) do
+			i = i + 1
+			oarray[i] = k
+		end
+		table.sort( oarray, lt or ltall )
+		for j = 1, i do
+			local k = oarray[j]
+			oarray[j] = {k,itable[k]}
+		end
+		return setmetatable( oarray, FnMT )
+	end,
+
 	pairs = function( itable )
 		local oarray, i = {}, 0
 		for k, v in pairs( itable ) do
@@ -464,6 +489,7 @@ Fn.Op = {
 	['empty?'] = function( a ) return next( a ) == nil end,
 	['...'] = Rest,
 	['_'] = Wild,
+	['<@'] = ltall,
 }
 
 Fn.Op.X = Fn.var'X'

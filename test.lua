@@ -99,4 +99,7 @@ assertq( fn{1,2,3,4}:match(
 	{1,2,3,fn'X'},
 	{1,2,13} ), {X = 4} )
 
+assertq( fn{x = 6, z = 5, y = 33}:sortedpairs(fn'<'), {{'x',6},{'y',33},{'z',5}} )
+assertq( fn{1, 2, [false] = {3,4}, x = 6, [{}] = true}:sortedpairs(), {{false,{3,4}}, {1,1}, {2,2}, {'x', 6}, {{},true}} )
+
 print('All passed')
