@@ -9,6 +9,14 @@ assertq( fn(5), {1,2,3,4,5} )
 assertq( fn'^'(2,10), 2^10)
 assertq( fn'//'(10,3), 3 )
 assertq( fn'//'(-10,3), -4 )
+assertq( fn'empty?'{1,2,3}, false )
+assertq( fn'empty?'{}, true )
+assertq( fn'id?''asd123', true )
+assertq( fn'id?''1asd123', false )
+assertq( fn'id?''asd_1_23', true )
+assertq( fn'id?''__asd123', true )
+assertq( fn'id?''1123', false )
+assertq( fn'id?''#*$(', false )
 assertq( fn{1,2,3,4,5}:foldl(fn'*',1), 120 )
 assertq( fn{1,2,3,4,5}:foldr(fn'..',''), '12345' )
 assertq( fn{1,2,3,4}:sum(), 10 )
@@ -84,5 +92,11 @@ print( fn{1,2,3,4,{5,6},[{1,2}] = {y = {z = {9,10}, 1, 2}, a = 12, g = {4}, 3, 4
 assertq( fn{1,2,3,5,6,7}:match{1,2,3,fn'X',6,7}, {X = 5} )
 assert( fn().equal( fn{1,2,3,5,6,7}:match{1,2,3,fn'X',6}, false ) )
 assertq( fn{1,2,3,5,6,7,8,9}:match{1,2,fn'X',5,6,fn'R'}, {X=3, R={7,8,9}})
+
+assertq( fn{1,2,3,4}:match(
+	{1,2,3},
+	{1,2,3,5},
+	{1,2,3,fn'X'},
+	{1,2,13} ), {X = 4} )
 
 print('All passed')

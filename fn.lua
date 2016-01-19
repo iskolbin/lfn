@@ -390,12 +390,20 @@ Fn = {
 		return #itable 
 	end,
 	
-	match = function( a, b )
-		acc = setmetatable( {}, TableMt )
+	match = function( a, b, ... )
+		acc = {}
 		local result = equal( a, b, acc ) 
 		if result then
-			return acc
+			return setmetatable( acc, FnMT )
 		else
+			local n = select( '#', ... )
+			for i = 1, n do
+				acc = next( acc ) == nil and acc or {}
+				result = equal( a, select( i, ... ), acc )
+				if result then 
+					return setmetatable( acc, FnMT )
+				end
+			end
 			return result
 		end
 	end,
@@ -404,6 +412,7 @@ Fn = {
 	concat = table.concat,
 	unpack = unpack,
 	setmetatable = setmetatable,
+	getmetatable = getmetatable,
 	tostring = tostring_,
 
 	pack = table.pack or function(...) return {...} end,
@@ -451,6 +460,8 @@ Fn.Op = {
 	['table?'] = function( a ) return type( a ) == 'table' end,
 	['userdata?'] = function( a ) return type( a ) == 'userdata' end,
 	['thread?'] = function( a ) return type( a ) == 'thread' end,
+	['id?'] = function( a ) return type( a ) == 'string' and a:match('^[%a_][%w_]*') ~= nil end,
+	['empty?'] = function( a ) return next( a ) == nil end,
 	['...'] = Rest,
 	['_'] = Wild,
 }
