@@ -13,8 +13,14 @@ local function equal( itable1, itable2, matchtable )
 	if itable1 == itable2 or itable2 == Wild or itable2 == Rest then
 		return true
 	elseif getmetatable( itable2 ) == Var then
-		matchtable[itable2[1]] = itable1
-		return true
+		if not itable2[2] or itable2[2]( itable1 ) then
+			if matchtable then
+				matchtable[itable2[1]] = itable1
+			end
+			return true
+		else
+			return false
+		end
 	else
 		local t1, t2 = type( itable1 ), type( itable2 )
 		if t1 == t2 and t1 == 'table' then
@@ -31,8 +37,14 @@ local function equal( itable1, itable2, matchtable )
 						for _, v_ in next, itable1, k do
 							rest[#rest+1] = v_
 						end
-						matchtable[v[1]] = rest
-						return true
+						if not v[2] or v[2]( rest ) then
+							if matchtable then
+								matchtable[v[1]] = rest
+							end
+							return true
+						else
+							return false
+						end
 					elseif itable1[k] == nil or not equal( itable1[k], v, matchtable ) then
 						return false
 					end
@@ -441,8 +453,8 @@ Fn = {
 	tostring = tostring_,
 
 	pack = table.pack or function(...) return {...} end,
-	var = function( a ) return setmetatable( {a}, Var ) end,
-	restvar = function( a ) return setmetatable( {a}, RestVar ) end,
+	var = function( a, b ) return setmetatable( {a, b}, Var ) end,
+	restvar = function( a, b ) return setmetatable( {a, b}, RestVar ) end,
 }
 
 FnMT = {
@@ -495,6 +507,8 @@ Fn.Op = {
 Fn.Op.X = Fn.var'X'
 Fn.Op.Y = Fn.var'Y'
 Fn.Op.Z = Fn.var'Z'
+Fn.Op.N = Fn.var( 'N', Fn.Op['number?'] )
+Fn.Op.S = Fn.var( 'S', Fn.Op['string?'] )
 Fn.Op.R = Fn.restvar'R'
 
 local FnOpMT = {
