@@ -302,20 +302,16 @@ Fn = {
 		return setmetatable( oarray, FnMT )
 	end,
 
-	copy = function( iarray )
-		local oarray = {}
-		for i = 1, #iarray do
-			oarray[i] = iarray[i]
+	copy = function( itable )
+		if type( itable ) == 'table' then
+			local otable = {}
+			for k, v in pairs( itable ) do
+				otable[Fn.copy( k )] = Fn.copy( v )
+			end
+			return setmetatable( otable, FnMT )
+		else
+			return itable
 		end
-		return setmetatable( oarray, FnMT )
-	end,
-
-	tcopy = function( itable )
-		local otable = {}
-		for k, v in pairs( itable ) do
-			otable[k] = v
-		end
-		return setmetatable( otable, FnMT )
 	end,
 
 	sort = function( iarray, cmp )
@@ -387,7 +383,7 @@ Fn = {
 	end,
 
 	update = function( itable, utable )
-		local otable = Fn.tcopy( itable )
+		local otable = Fn.copy( itable )
 		for k, v in pairs( utable ) do
 			otable[k] = v
 		end
@@ -395,7 +391,7 @@ Fn = {
 	end,
 
 	delete = function( itable, dtable )
-		local otable = Fn.tcopy( itable )
+		local otable = Fn.copy( itable )
 		for k, v in pairs( dtable ) do
 			otable[v] = nil
 		end
@@ -483,6 +479,7 @@ Fn.Op = {
 	['~='] = function( a, b ) return a ~= b end,
 	['>'] = function( a, b ) return a > b end,
 	['>='] = function( a, b ) return a >= b end,
+	['[]'] = function( a, b ) return b[a] end,
 	['nil?'] = function( a ) return a == nil end,
 	['zero?'] = function( a ) return a == 0 end,
 	['positive?'] = function( a ) return a > 0 end,
