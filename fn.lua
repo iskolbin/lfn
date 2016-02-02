@@ -59,9 +59,9 @@ local function equal( itable1, itable2, matchtable )
 	end
 end
 
-local function tostring_( arg, saved, ident )
+local function tostring_( arg, saved_, ident_ )
 	local t = type( arg )
-	local saved, ident = saved or {n = 0, recursive = {}}, ident or 0
+	local saved, ident = saved_ or {n = 0, recursive = {}}, ident_ or 0
 	if t == 'nil' or t == 'boolean' or t == 'number' or t == 'function' or t == 'userdata' or t == 'thread' then
 		return tostring( arg )
 	elseif t == 'string' then
@@ -112,7 +112,7 @@ local function ltall( a, b )
 end
 
 Fn = {
-	each = function( iarray, f, mode )
+	each = function( iarray, f )
 		for i = 1, #iarray do
 			f( iarray[i] ) 
 		end 
@@ -132,16 +132,16 @@ Fn = {
 		return acc
 	end,
 	
-	sum = function( iarray, acc )
-		local acc = acc or 0
+	sum = function( iarray, acc_ )
+		local acc = acc_ or 0
 		for i = 1, #iarray do
 			acc = iarray[i] + acc
 		end
 		return acc
 	end,
 	
-	shuffle = function( iarray, rand )
-		local rand = rand or math.random
+	shuffle = function( iarray, rand_ )
+		local rand = rand_ or math.random
 		local oarray = {}
 		for i = 1, #iarray do
 			oarray[i] = iarray[i]
@@ -150,11 +150,11 @@ Fn = {
 			local j = rand( i )
 			oarray[j], oarray[i] = oarray[i], oarray[j]
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
-	slice = function( iarray, init, limit, step )
-		local init, limit, step = init, limit or #iarray, step or 1
+	slice = function( iarray, init_, limit_, step_ )
+		local init, limit, step = init_, limit_ or #iarray, step_ or 1
 
 		if init < 0 then init = #iarray + init + 1 end
 		if limit < 0 then limit = #iarray + limit + 1 end
@@ -164,7 +164,7 @@ Fn = {
 			j = j + 1
 			oarray[j] = iarray[i]
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	reverse = function( iarray )
@@ -172,13 +172,13 @@ Fn = {
 		for i = n, 1, -1 do
 			oarray[n - i] = iarray[i]
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
-	insert = function( iarray, toinsert, pos )
+	insert = function( iarray, toinsert, pos_ )
 		local n, m, oarray = #iarray, #toinsert, {}
-		local pos = pos or n+1
-		pos = pos < 0 and n + pos + 2 or pos, n
+		local pos = pos_ or n+1
+		pos = pos < 0 and n + pos + 2 or pos
 		if pos <= 1 then
 			for i = 1, m do oarray[i] = toinsert[i] end
 			for i = 1, n do oarray[m+i] = iarray[i] end
@@ -190,7 +190,7 @@ Fn = {
 			for i = 1, m do oarray[i+pos-1] = toinsert[i] end
 			for i = pos, n do oarray[i+m] = iarray[i] end
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	remove = function( iarray, toremove, cmp )
@@ -202,11 +202,11 @@ Fn = {
 				oarray[j] = v
 			end
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	partition = function( iarray, p )
-		local oarray, j, k = {setmetatable({}, FnMT),setmetatable({}, FnMT)}, 0, 0
+		local oarray, j, k = {setmetatable({}, FnMt),setmetatable({}, FnMt)}, 0, 0
 		for i = 1, #iarray do
 			if p( iarray[i] ) then
 				j = j + 1
@@ -216,7 +216,7 @@ Fn = {
 				oarray[2][k] = iarray[i]
 			end
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	flatten = function( iarray )
@@ -234,7 +234,7 @@ Fn = {
 		for i = 1, #iarray do 
 			j = doFlatten( oarray, iarray[i], j ) 
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	count = function( iarray, p )
@@ -273,7 +273,7 @@ Fn = {
 				oarray[j] = iarray[i]
 			end
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	map = function( iarray, f )
@@ -281,7 +281,7 @@ Fn = {
 		for i = 1, #iarray do
 			oarray[i] = f( iarray[i] )
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	keys = function( itable )
@@ -290,7 +290,7 @@ Fn = {
 			i = i + 1
 			oarray[i] = k
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	values = function( itable )
@@ -299,7 +299,7 @@ Fn = {
 			i = i + 1
 			oarray[i] = v
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	copy = function( itable )
@@ -308,7 +308,7 @@ Fn = {
 			for k, v in pairs( itable ) do
 				otable[Fn.copy( k )] = Fn.copy( v )
 			end
-			return setmetatable( otable, FnMT )
+			return setmetatable( otable, FnMt )
 		else
 			return itable
 		end
@@ -329,7 +329,7 @@ Fn = {
 			end
 		else
 			assert( type( cmp ) == 'function', '3rd argument should be nil for linear search and comparator for binary search' )
-			local init, limit = 1, #iarray, 0
+			local init, limit = 1, #iarray
 			local floor = math.floor
 			while init <= limit do
 				local mid = floor( 0.5*(init+limit))
@@ -343,16 +343,16 @@ Fn = {
 	end,
 
 	ipairs = function( iarray )
-		local oarray, i = {}, 0
+		local oarray = {}
 		for i = 1, #iarray do
 			oarray[i] = {i,iarray[i]}
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	sortedpairs = function( itable, lt )
 		local oarray, i = {}, 0
-		for k, v in pairs( itable ) do
+		for k, _ in pairs( itable ) do
 			i = i + 1
 			oarray[i] = k
 		end
@@ -361,7 +361,7 @@ Fn = {
 			local k = oarray[j]
 			oarray[j] = {k,itable[k]}
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	pairs = function( itable )
@@ -370,7 +370,7 @@ Fn = {
 			i = i + 1
 			oarray[i] = {k,v}
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	frompairs = function( iarray )
@@ -379,7 +379,7 @@ Fn = {
 			local k, v = iarray[i][1], iarray[i][2]
 			otable[k] = v
 		end
-		return setmetatable( otable, FnMT )
+		return setmetatable( otable, FnMt )
 	end,
 
 	update = function( itable, utable )
@@ -392,7 +392,7 @@ Fn = {
 
 	delete = function( itable, dtable )
 		local otable = Fn.copy( itable )
-		for k, v in pairs( dtable ) do
+		for _, v in pairs( dtable ) do
 			otable[v] = nil
 		end
 		return otable
@@ -408,7 +408,7 @@ Fn = {
 				oarray[j] = v
 			end
 		end
-		return setmetatable( oarray, FnMT )
+		return setmetatable( oarray, FnMt )
 	end,
 
 	nkeys = function( itable )
@@ -424,17 +424,17 @@ Fn = {
 	end,
 	
 	match = function( a, b, ... )
-		acc = {}
+		local acc = {}
 		local result = equal( a, b, acc ) 
 		if result then
-			return setmetatable( acc, FnMT )
+			return setmetatable( acc, FnMt )
 		else
 			local n = select( '#', ... )
 			for i = 1, n do
 				acc = next( acc ) == nil and acc or {}
 				result = equal( a, select( i, ... ), acc )
 				if result then 
-					return setmetatable( acc, FnMT )
+					return setmetatable( acc, FnMt )
 				end
 			end
 			return result
@@ -453,7 +453,7 @@ Fn = {
 	restvar = function( a, b ) return setmetatable( {a, b}, RestVar ) end,
 }
 
-FnMT = {
+FnMt = {
 	__index = Fn
 }
 
@@ -509,7 +509,7 @@ Fn.Op.S = Fn.var( 'S', Fn.Op['string?'] )
 Fn.Op.R = Fn.restvar'R'
 
 local FnOpMT = {
-	__index = function( self, k )
+	__index = function( _, k )
 		local f = FnOpCache[k]
 		if not f then
 			f = assert(load( 'return function(x,y,z,...) return ' .. k .. ' end' ))()
@@ -521,8 +521,8 @@ local FnOpMT = {
 
 setmetatable( Fn.Op, FnOpMT )
 
-local function range( init, limit, step )
-	local init, limit = init, limit
+local function range( init_, limit_, step_ )
+	local init, limit, step = init_, limit_, step_
 	local array = {}
 	if not limit then
 		init, limit = 1, init
@@ -535,7 +535,7 @@ local function range( init, limit, step )
 		j = j + 1
 		array[j] = i
 	end	
-	return setmetatable( array, FnMT )
+	return setmetatable( array, FnMt )
 end
 
 return function( tbl, ... )
@@ -543,7 +543,7 @@ return function( tbl, ... )
 	if t == 'string' then
 		return Fn.Op[tbl]
 	elseif t == 'table' then	
-		return setmetatable( tbl, FnMT )
+		return setmetatable( tbl, FnMt )
 	elseif t == 'number' then
 		return range( tbl, ... )
 	elseif t == 'nil' then
