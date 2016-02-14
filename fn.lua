@@ -1,7 +1,7 @@
 local Fn
 local FnMt
 local FnOpCache = setmetatable( {}, {__mode = 'kv'} )
-local load, unpack = load or loadstring, table.unpack or unpack
+local loadstring, unpack = loadstring, table.unpack or unpack
 local setmetatable, getmetatable, type, pairs = setmetatable, getmetatable, type, pairs
 
 local Wild = {}
@@ -512,7 +512,7 @@ local FnOpMT = {
 	__index = function( _, k )
 		local f = FnOpCache[k]
 		if not f then
-			f = assert(load( 'return function(x,y,z,...) return ' .. k .. ' end' ))()
+			f = assert(loadstring( 'return function(x,y,z,...) return ' .. k .. ' end' ))()
 			FnOpCache[k] = f
 		end
 		return f
