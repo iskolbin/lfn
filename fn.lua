@@ -1,7 +1,7 @@
 local Fn
 local FnMt
 local FnOpCache = setmetatable( {}, {__mode = 'kv'} )
-local loadstring, unpack = loadstring, table.unpack or unpack
+local loadstring, unpack = loadstring or load, table.unpack or unpack
 local setmetatable, getmetatable, type, pairs = setmetatable, getmetatable, type, pairs
 
 local Wild = {}
@@ -280,6 +280,14 @@ Fn = {
 		local oarray = {}		
 		for i = 1, #iarray do
 			oarray[i] = f( iarray[i] )
+		end
+		return setmetatable( oarray, FnMt )
+	end,
+
+	imap = function( iarray, f )
+		local oarray = {}		
+		for i = 1, #iarray do
+			oarray[i] = f( i, iarray[i] )
 		end
 		return setmetatable( oarray, FnMt )
 	end,
