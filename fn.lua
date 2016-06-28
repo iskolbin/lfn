@@ -153,7 +153,7 @@ Fn = {
 		return setmetatable( oarray, FnMt )
 	end,
 
-	slice = function( iarray, init_, limit_, step_ )
+	sub = function( iarray, init_, limit_, step_ )
 		local init, limit, step = init_, limit_ or #iarray, step_ or 1
 
 		if init < 0 then init = #iarray + init + 1 end
@@ -427,7 +427,7 @@ Fn = {
 		return n
 	end,
 
-	length = function( itable ) 
+	len = function( itable ) 
 		return #itable 
 	end,
 	
