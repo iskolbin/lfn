@@ -59,13 +59,17 @@ local function equal( itable1, itable2, matchtable )
 	end
 end
 
-local function tostring_( arg, saved_, ident_ )
+local function tostring_( arg, saved_, level_ )
 	local t = type( arg )
-	local saved, ident = saved_ or {n = 0, recursive = {}}, ident_ or 0
+	local saved, level = saved_ or {n = 0, recursive = {}}, level_ or 0
 	if t == 'nil' or t == 'boolean' or t == 'number' or t == 'function' or t == 'userdata' or t == 'thread' then
 		return tostring( arg )
 	elseif t == 'string' then
-		return ('%q'):format( arg )
+		if arg:match('^[%a_][%w_]*$') then
+			return arg
+		else
+			return ('%q'):format( arg )
+		end
 	else
 		if saved[arg] then
 			return '<table rec:' .. saved[arg] .. '>'
@@ -76,17 +80,19 @@ local function tostring_( arg, saved_, ident_ )
 			if mt ~= nil and mt.__tostring then
 				return mt.__tostring( arg )
 			else
+				local isarray = true
 				local ret = {}
 				local na = #arg
 				for i = 1, na do
-					ret[i] = tostring_( arg[i], saved, ident )
+					ret[i] = tostring_( arg[i], saved, level )
 				end
 				local tret = {}
 				local nt = 0					
 				for k, v in pairs(arg) do
 					if not ret[k] then
+						isarray = false
 						nt = nt + 1
-						tret[nt] = (' '):rep(ident+1) .. tostring_( k, saved, ident + 1 ) .. ' => ' .. tostring_( v, saved, ident + 1 )
+						tret[nt] = (' '):rep(2*(level+1)) .. tostring_( k, saved, level+1 ) .. ': ' .. tostring_( v, saved, level+1 )
 					end
 				end
 				local retc = table.concat( ret, ',' )
@@ -94,7 +100,7 @@ local function tostring_( arg, saved_, ident_ )
 				if tretc ~= '' then
 					tretc = '\n' .. tretc
 				end
-				return '{' .. retc .. ( retc ~= '' and tretc ~= '' and ',' or '') .. tretc .. '|' .. saved[arg] .. '}'
+				return (isarray and '[%s%s%s]' or '{%s%s%s}'):format( retc, retc ~= '' and tretc ~= '' and ',' or '', tretc )
 			end
 		end
 	end
@@ -147,7 +153,7 @@ Fn = {
 			oarray[i] = iarray[i]
 		end
 		for i = #iarray, 1, -1 do
-			local j = rand( i )
+			local j = rand( 1, i )
 			oarray[j], oarray[i] = oarray[i], oarray[j]
 		end
 		return setmetatable( oarray, FnMt )
