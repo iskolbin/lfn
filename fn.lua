@@ -241,11 +241,12 @@ function fn.reverse( iarray )
 	return oarray
 end
 
-function fn.insert( iarray, toinsert, pos_ )
-	assert( type( toinsert ) == 'table', 'second argument must be a table of insertable elements' )
+function fn.insert( iarray, toinsert_pos, toinsert_ )
+	local toinsert = toinsert_ and toinsert_ or toinsert_pos
 	local n, m, oarray = fn.len( iarray ), fn.len( toinsert ), fn.wrap{}
-	local pos = pos_ or n+1
+	local pos = toinsert_ and toinsert_pos or n+1
 	pos = pos < 0 and n + pos + 2 or pos
+	assert( type( toinsert ) == 'table', 'second argument must be a table of insertable elements' )
 	if pos <= 1 then
 		for i = 1, m do oarray[i] = toinsert[i] end
 		for i = 1, n do oarray[m+i] = iarray[i] end
@@ -260,11 +261,14 @@ function fn.insert( iarray, toinsert, pos_ )
 	return oarray
 end
 
-function fn.remove( iarray, toremove, cmp )
-	local oarray, j = fn.wrap{}, 0
+function fn.remove( iarray, toremove )
+	local oarray, j, torm = fn.wrap{}, 0, {}
+	for i = 1, fn.len( toremove ) do
+		torm[ toremove[i]] = true
+	end
 	for i = 1, fn.len( iarray ) do
 		local v = iarray[i]
-		if fn.indexof( toremove, v, cmp ) == nil then
+		if not torm[v] then
 			j = j + 1
 			oarray[j] = v
 		end
