@@ -45,7 +45,7 @@ Lua functional library
 * indexof( array, value, cmp ), binary search of the `value` in the sorted `array` with `cmp` ordering
 * find( array, p ), linear search of the value which holds `p( value, index, array ) => bool`
 * nkeys( table ), returns total count of keys in `table`
-* equal( v1, v2 ), checks `v1` and `v2` on deep equality, tables are supported but without table keys
+* equal( v1, v2 ), checks `v1` and `v2` on deep equality, tables are supported but without table keys, also you can use `fn._` as the wildcard
 * tostring( v ), returns jsony like representation of passed value
 * concat == table.concat
 * unpack == table.unpack
