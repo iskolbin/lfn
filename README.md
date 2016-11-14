@@ -35,22 +35,22 @@ Lua functional library
 * `update( table, upd )`, updates `table` content from the `upd` table, adding new values, changing old, to delete table entry one need to pass `fn.NIL` value
 
 ## Folds
-* foldl( array, f, acc ), common reduce from the begining of `array`, reduces by function `f(v,acc,i,arr) => acc,stop` where if `stop` is notfalsy the reducing process halts
-* foldr( array, f, acc ), reduce from the end of `array`
-* sum( array ), returns sum of `array` elements
-* all( array, p ), returns `true` if all `array` elements hold `p( value, index, array) => bool`
-* any( array, p ), returns `true` if any of the `array` element holds `p( value, index, array ) => bool`
-* count( array, p ), counts number of `array` items for which predicate `p( value, index, array ) => bool` holds
-* indexof( array, value ), linear search of the `value` in the `array`
-* indexof( array, value, cmp ), binary search of the `value` in the sorted `array` with `cmp` ordering
-* find( array, p ), linear search of the value which holds `p( value, index, array ) => bool`
-* nkeys( table ), returns total count of keys in `table`
-* equal( v1, v2 ), checks `v1` and `v2` on deep equality, tables are supported but without table keys, also you can use `fn._` as the wildcard
-* tostring( v ), returns jsony like representation of passed value
-* concat == table.concat
-* unpack == table.unpack
-* setmetatable == setmetatable
-* fn.pack == table.pack or {...}
+* `foldl( array, f, acc )`, common reduce from the begining of `array`, reduces by function `f(v,acc,i,arr) => acc,stop` where if `stop` is notfalsy the reducing process halts
+* `foldr( array, f, acc )`, reduce from the end of `array`
+* `sum( array )`, returns sum of `array` elements
+* `all( array, p )`, returns `true` if all `array` elements hold `p( value, index, array) => bool`
+* `any( array, p )`, returns `true` if any of the `array` element holds `p( value, index, array ) => bool`
+* `count( array, p )`, counts number of `array` items for which predicate `p( value, index, array ) => bool` holds
+* `indexof( array, value )`, linear search of the `value` in the `array`
+* `indexof( array, value, cmp )`, binary search of the `value` in the sorted `array` with `cmp` ordering
+* `find( array, p )`, linear search of the value which holds `p( value, index, array ) => bool`
+* `nkeys( table )`, returns total count of keys in `table`
+* `equal( v1, v2 )`, checks `v1` and `v2` on deep equality, tables are supported but without table keys, also you can use `fn._` as the wildcard
+* `tostring( v )`, returns jsony like representation of passed value
+* `concat` == `table.concat`
+* `unpack` == `table.unpack`
+* `setmetatable` == `setmetatable`
+* `fn.pack` == `table.pack or {...}`
 
 ## String lambda
 * `fn.lambda( source )`, create simple string lambda from `source` which has form `|<args>|<body expression` which transforms into
