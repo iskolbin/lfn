@@ -1,3 +1,7 @@
+-- Lua functional library
+-- created by Ilya Kolbin (iskolbin@gmail.com)
+-- originally hosted at github.com/iskolbin/lfn
+
 local fn = {
 	ID_PATTERN = '^[%a_][%w_]*$',
 	NIL = {},

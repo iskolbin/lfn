@@ -61,5 +61,5 @@ end
 ```
 
 ## Aliases
-* fn( table ) == fn.copy( table )
-* fn( string ) == fn.lambda( string )
+* `fn( table )` == `fn.copy( table )`
+* `fn( string )` == `fn.lambda( string )`
