@@ -220,15 +220,15 @@ function fn.shuffle( iarray, rand_ )
 end
 
 function fn.sub( iarray, init_, limit_, step_ )
-	local init, limit, step = init_, limit_ or fn.len( iarray ), step_ or 1
-
+	local len = fn.len( iarray )
+	local init, limit, step = init_, limit_ or len, step_ or 1
 	if init < 0 then 
-		init = fn.len( iarray ) + init + 1 
+		init = len + init + 1
 	end
 	if limit < 0 then 
-		limit = fn.len( iarray ) + limit + 1 
+		limit = len + limit + 1
 	end
-
+	init, limit = math.max( 1, math.min( init, len )), math.max( 1, math.min( limit, len ))
 	local oarray, j = fn.wrap{}, 0
 	for i = init, limit, step do
 		j = j + 1
@@ -503,9 +503,12 @@ end
 
 function fn.range( init_, limit_, step_ )
 	local init, limit, step = init_, limit_, step_
-	local array = {}
+	local array = fn.wrap{}
 	if not limit then
-		init, limit = 1, init
+		if init == 0 then
+			return array
+		end
+		init, limit = init > 0 and 1 or -1, init
 	end
 	if not step then
 		step = init < limit and 1 or -1
@@ -515,7 +518,7 @@ function fn.range( init_, limit_, step_ )
 		j = j + 1
 		array[j] = i
 	end	
-	return fn.wrap( array )
+	return array
 end
 
 fn.concat = table.concat
