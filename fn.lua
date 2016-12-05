@@ -441,7 +441,7 @@ function fn.sortedpairs( itable, lt )
 		i = i + 1
 		sortedkeys[i] = k
 	end
-	table.sort( oarray, lt or ltall )
+	table.sort( sortedkeys, lt or ltall )
 	local oarray = fn.wrap{}
 	for j = 1, i do
 		local k = sortedkeys[j]

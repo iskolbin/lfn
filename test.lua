@@ -147,3 +147,16 @@ assertq( fn.range(2,5), {2,3,4,5} )
 assertq( fn.range(5,1), {5,4,3,2,1} )
 assertq( fn.range(1,6,2),{1,3,5})
 assertq( fn.range(5,2,-2),{5,3})
+assertq( fn.sortedpairs{x = 2, z = 3, y = 6}, {{'x',2},{'y',6},{'z',3}} )
+
+local function qsort( a )
+	if #a > 1 then
+		local b = fn(a)
+		local pivot = table.remove( b, 1 )
+		return qsort( b:filter( fn.rcur.lt( pivot ))):insert{pivot}:insert( qsort( b:filter( fn.rcur.ge( pivot ))))
+	else
+		return a
+	end
+end
+
+assertq( qsort{1, 2, 3, 1, 2, 3, -1, -2, -3}, {-3, -2, -1, 1, 1, 2, 2, 3, 3} )
