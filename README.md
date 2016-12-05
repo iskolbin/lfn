@@ -3,6 +3,22 @@
 Lua functional library
 ======================
 
+```lua
+-- Very inefficient but compact quicksort implementation
+
+local fn = require'fn'
+
+local function qsort( a )
+	if fn.len( a ) > 1 then
+		local pivot, tail = fn( a ):partition( fn'|x,i| i == 1' )
+		local left, right = tail:partition( fn.rcur.lt( pivot[1] ))
+		return qsort( left ):merge( pivot ):merge( qsort( right ))
+	else
+		return a
+	end
+end
+```
+
 Usage
 -----
 

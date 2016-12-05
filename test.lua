@@ -154,10 +154,10 @@ assertq( fn.range(5,2,-2),{5,3})
 assertq( fn.sortedpairs{x = 2, z = 3, y = 6}, {{'x',2},{'y',6},{'z',3}} )
 
 local function qsort( a )
-	if #a > 1 then
-		local pivot, tail = fn(a):partition( fn'|x,i| i == 1' )
-		local left, right = tail:filter( fn.rcur.lt( pivot[1] )), tail:filter( fn.rcur.lt( pivot[1] ))
-		return qsort( tail:filter( fn.rcur.lt( pivot[1] ))):merge(pivot):merge(qsort( tail:filter( fn.rcur.ge( pivot[1] ))))
+	if fn.len( a ) > 1 then
+		local pivot, tail = fn( a ):partition( fn'|x,i| i == 1' )
+		local left, right = tail:partition( fn.rcur.lt( pivot[1] ))
+		return qsort( left ):merge( pivot ):merge( qsort( right ))
 	else
 		return a
 	end
