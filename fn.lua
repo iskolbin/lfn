@@ -462,8 +462,7 @@ end
 function fn.frompairs( iarray )
 	local otable = fn.wrap{}
 	for i = 1, fn.len( iarray ) do
-		local k, v = iarray[i][1], iarray[i][2]
-		otable[k] = v
+		otable[iarray[i][1]] = iarray[i][2]
 	end
 	return otable
 end
