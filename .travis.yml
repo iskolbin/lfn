@@ -1,11 +1,9 @@
 dist: trusty
-sudo: false
+sudo: true
 language: lua
 
 before_install:
-  - apt install luajit
-  - apt install lua5.2
-  - apt install lua5.1
+  - sudo apt install luajit lua5.1 lua5.2
 
 before_script:
 
