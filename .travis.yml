@@ -1,0 +1,12 @@
+language: lua
+lua:
+  - 5.2
+  - 5.3
+
+before_install:
+
+before_script:
+
+script:
+  - lua test.lua
+
