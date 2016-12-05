@@ -1,12 +1,15 @@
+dist: trusty
+sudo: false
 language: lua
-lua:
-  - 5.2
-  - 5.3
 
 before_install:
+  - sudo apt-get install luajit
+  - sudo apt-get install lua5.2
+  - sudo apt-get install lua5.1
 
 before_script:
 
 script:
-  - lua test.lua
-
+  - lua5.1 test.lua
+  - lua5.2 test.lua
+  - luajit test.lua
