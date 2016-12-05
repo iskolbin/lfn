@@ -5,7 +5,7 @@ local function assertq( a, b )
 end
 
 assertq( {fn.proxy( 1, 2, 3 )}, {1,2,3} )
-assertq( fn.truth(), false )
+assertq( fn.truth(), true )
 assertq( fn.lie(), false )
 assertq( fn.neg( 33 ), -33 )
 assertq( fn.neg( -42 ), 42 )
