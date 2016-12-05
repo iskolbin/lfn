@@ -1,7 +1,11 @@
-# lfn
-Lua functional library
+[Build Status](https://travis-ci.org/iskolbin/lfn.svg?branch=master)
 
-## Usage
+Lua functional library
+======================
+
+Usage
+-----
+
 * `fn.copy( table )` makes a shallow copy of the `table` and set helper metatable to allow chain calls using `:` syntax
 * `fn.wrap( table )` set helper metatable directly, which overwrites current metatable of passed `table`
 * `fn.range( limit )` creates range from 1 to `limit > 0` or from -1 to `limit < 0`, with helper metatable set, for `limit == 0` returns empty array
@@ -10,7 +14,9 @@ Lua functional library
 * `fn.chars( string )` creates array with UTF-8 chars extracted from `string`
 * `fn.chars( string, pattern )` creates array with substrings from `string` extracted using `pattern`. To get all chars just as is use `"."` pattern
 
-## Array transforms
+Array transforms
+----------------
+
 * `map( array, f )` transforms passed array by mapping with signature `f(value,index,array) => newvalue`
 * `filter( array, p )` filters elements from array which hold predicate `p(value,index,array) => boolean`
 * `shuffle( array )` shuffles array using `math.random` generator
@@ -34,14 +40,18 @@ Lua functional library
 * `zip( ... )` maps tuple of sequences into a sequence of tuples, i.e. `zip({a,b},{1,2},{x,y}) => {{a,1,x},{b,2,y}}`
 * `unzip( array )` maps sequence of tuples into tuple of sequences
 
-## Table transforms
+Table transforms
+----------------
+
 * `keys( table )` returns array with `table` keys
 * `values( table )` returns array with `table` values
 * `pairs( table )` returns array filled with table pairs `{key,value}`
 * `sortedpairs( table )` returns array filled with table pairs `{key,value}` sorted by `fn.ltall` predicate
 * `update( table, upd )` updates `table` content from the `upd` table, adding new values, to delete table entry one need to pass `fn.NIL` value
 
-## Folds
+Folds
+-----
+
 * `foldl( array, f, acc )` common reduce from the begining of `array`, reduces by the function `f(v,acc,i,arr) => acc,stop` where if `stop` is notfalsy the reducing process halts
 * `foldr( array, f, acc )` reduce from the end of `array`
 * `sum( array )` returns sum of `array` elements
@@ -59,7 +69,9 @@ Lua functional library
 * `setmetatable` == `setmetatable`
 * `fn.pack` == `table.pack or {...}`
 
-## String lambda
+String lambda
+-------------
+
 * `fn.lambda( source )`, create simple string lambda from `source` which has form `|<args>|<body expression` which transforms into
 ```lua
 function(<args>)
@@ -67,6 +79,8 @@ function(<args>)
 end
 ```
 
-## Aliases
+Aliases
+-------
+
 * `fn( table )` == `fn.copy( table )`
 * `fn( string )` == `fn.lambda( string )`
