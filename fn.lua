@@ -178,9 +178,9 @@ function fn.ltall( a, b )
 	end
 end
 
-function fn.foldl( iarray, f, acc )
-	for i = 1, fn.len( iarray ) do
-		acc, stop = f( iarray[i], acc, i, iarray )
+function fn.foldl( self, f, acc )
+	for i = 1, fn.len( self ) do
+		acc, stop = f( self[i], acc, i, self )
 		if stop then
 			return acc
 		end
@@ -188,9 +188,9 @@ function fn.foldl( iarray, f, acc )
 	return acc
 end
 
-function fn.foldr( iarray, f, acc )
-	for i = fn.len( iarray ), 1, -1 do
-		acc, stop = f( iarray[i], acc, i, iarray )
+function fn.foldr( self, f, acc )
+	for i = fn.len( self ), 1, -1 do
+		acc, stop = f( self[i], acc, i, self )
 		if stop then
 			return acc
 		end
@@ -198,30 +198,30 @@ function fn.foldr( iarray, f, acc )
 	return acc
 end
 	
-function fn.sum( iarray, acc_ )
-	local acc = acc_ or 0
-	for i = 1, fn.len( iarray ) do
-		acc = iarray[i] + acc
+function fn.sum( self, acc )
+	acc = acc or 0
+	for i = 1, fn.len( self ) do
+		acc = self[i] + acc
 	end
 	return acc
 end
 	
-function fn.shuffle( iarray, rand_ )
-	local rand = rand_ or math.random
-	local oarray = fn.wrap{}
-	for i = 1, fn.len( iarray ) do
-		oarray[i] = iarray[i]
+function fn.shuffle( self, rand )
+	rand = rand or math.random
+	local result = fn.wrap{}
+	for i = 1, fn.len( self ) do
+		result[i] = self[i]
 	end
-	for i = fn.len( iarray ), 1, -1 do
+	for i = fn.len( self ), 1, -1 do
 		local j = rand( 1, i )
-		oarray[j], oarray[i] = oarray[i], oarray[j]
+		result[j], result[i] = result[i], result[j]
 	end
-	return oarray
+	return result
 end
 
-function fn.sub( iarray, init_, limit_, step_ )
-	local len = fn.len( iarray )
-	local init, limit, step = init_, limit_ or len, step_ or 1
+function fn.sub( self, init, limit, step )
+	local len = fn.len( self )
+	init, limit, step = init, limit or len, step or 1
 	if init < 0 then 
 		init = len + init + 1
 	end
@@ -229,69 +229,111 @@ function fn.sub( iarray, init_, limit_, step_ )
 		limit = len + limit + 1
 	end
 	init, limit = math.max( 1, math.min( init, len )), math.max( 1, math.min( limit, len ))
-	local oarray, j = fn.wrap{}, 0
+	local result, j = fn.wrap{}, 0
 	for i = init, limit, step do
 		j = j + 1
-		oarray[j] = iarray[i]
+		result[j] = self[i]
 	end
-	return oarray
+	return result
 end
 
-function fn.reverse( iarray )
-	local oarray, n = fn.wrap{}, fn.len( iarray ) + 1
+function fn.reverse( self )
+	local result, n = fn.wrap{}, fn.len( self ) + 1
 	for i = n, 1, -1 do
-		oarray[n - i] = iarray[i]
+		result[n - i] = self[i]
 	end
-	return oarray
+	return result
 end
 
-function fn.insert( iarray, toinsert_pos, toinsert_ )
-	local toinsert = toinsert_ and toinsert_ or toinsert_pos
-	local n, m, oarray = fn.len( iarray ), fn.len( toinsert ), fn.wrap{}
-	local pos = toinsert_ and toinsert_pos or n+1
-	pos = pos < 0 and n + pos + 2 or pos
-	assert( type( toinsert ) == 'table', 'second argument must be a table of insertable elements' )
-	if pos <= 1 then
-		for i = 1, m do oarray[i] = toinsert[i] end
-		for i = 1, n do oarray[m+i] = iarray[i] end
-	elseif pos > n then
-		for i = 1, n do oarray[i] = iarray[i] end
-		for i = 1, m do oarray[i+n] = toinsert[i] end
+function fn.insert( self, pos, ... )
+	local n, m = fn.len( self ), select( '#', ... )
+	if m == 0 then
+		return self
 	else
-		for i = 1, pos-1 do oarray[i] = iarray[i] end
-		for i = 1, m do oarray[i+pos-1] = toinsert[i] end
-		for i = pos, n do oarray[i+m] = iarray[i] end
+		local result = fn.wrap{}
+		pos = pos < 0 and n + pos + 2 or pos
+		pos = pos < 0 and 1 or pos > n+1 and n+1 or pos
+		for i = 1, pos-1 do result[i] = self[i] end
+		for i = 1, m do result[i+pos-1] = select( i, ... ) end
+		for i = pos, n do result[i+m] = self[i] end
+		return result
 	end
-	return oarray
 end
 
-function fn.remove( iarray, toremove )
-	local oarray, j, torm = fn.wrap{}, 0, {}
-	for i = 1, fn.len( toremove ) do
-		torm[ toremove[i]] = true
+function fn.append( self, ... )
+	return fn.insert( self, -1, ... )
+end
+
+function fn.merge( self, list, lt )
+	local n, m = fn.len( self ), fn.len( list )
+	if n == 0 then
+		return list
+	elseif m == 0 then
+		return self
 	end
-	for i = 1, fn.len( iarray ) do
-		local v = iarray[i]
-		if not torm[v] then
-			j = j + 1
-			oarray[j] = v
+	
+	local result
+	if lt then
+		result = fn.wrap{}
+		local i, j, k = 0, 1, 1
+		while j <= n and k <= m do
+			i = i + 1
+			if lt( self[j], list[k] ) then
+				result[i] = self[j]
+				j = j + 1
+			else
+				result[i] = list[k]
+				k = k + 1
+			end
+		end
+		if j > n then
+			for k = k, m do
+				i = i + 1
+				result[i] = list[k]
+			end
+		elseif k > m then
+			for j = j, n do
+				i = i + 1
+				result[i] = self[j]
+			end
+		end
+		return result
+	else
+		result = fn.copy( self )
+		for i = 1, m do
+			result[i+n] = list[i]
 		end
 	end
-	return oarray
+	return result
 end
 
-function fn.partition( iarray, p )
-	local oarray1, oarray2, j, k = fn.wrap{}, fn.wrap{}, 0, 0
-	for i = 1, fn.len( iarray ) do
-		if p( iarray[i], i, iarray ) then
+function fn.remove( self, ... )
+	local result, j, toremove = fn.wrap{}, 0, {}
+	for i = 1, select( '#', ... ) do
+		toremove[select( i, ... )] = true
+	end
+	for i = 1, fn.len( self ) do
+		local v = self[i]
+		if not toremove[v] then
 			j = j + 1
-			oarray1[j] = iarray[i]
+			result[j] = v
+		end
+	end
+	return result
+end
+
+function fn.partition( self, p )
+	local result1, result2, j, k = fn.wrap{}, fn.wrap{}, 0, 0
+	for i = 1, fn.len( self ) do
+		if p( self[i], i, self ) then
+			j = j + 1
+			result1[j] = self[i]
 		else
 			k = k + 1
-			oarray2[k] = iarray[i]
+			result2[k] = self[i]
 		end
 	end
-	return oarray1, oarray2
+	return result1, result2
 end
 
 local function doflatten( t, v, index )
@@ -306,111 +348,111 @@ local function doflatten( t, v, index )
 	return index
 end
 
-function fn.flatten( iarray )
-	local oarray, j = fn.wrap{}, 0
-	for i = 1, fn.len( iarray ) do 
-		j = doflatten( oarray, iarray[i], j ) 
+function fn.flatten( self )
+	local result, j = fn.wrap{}, 0
+	for i = 1, fn.len( self ) do 
+		j = doflatten( result, self[i], j ) 
 	end
-	return oarray
+	return result
 end
 
-function fn.count( iarray, p )
+function fn.count( self, p )
 	local n = 0
-	for i = 1, fn.len( iarray ) do
-		if p( iarray[i], i, iarray ) then
+	for i = 1, fn.len( self ) do
+		if p( self[i], i, self ) then
 			n = n + 1
 		end
 	end
 	return n
 end
 
-function fn.all( iarray, f )
-	for i = 1, fn.len( iarray ) do
-		if not f( iarray[i], i, iarray ) then
+function fn.all( self, f )
+	for i = 1, fn.len( self ) do
+		if not f( self[i], i, self ) then
 			return false
 		end
 	end
 	return true
 end
 
-function fn.any( iarray, f )
-	for i = 1, fn.len( iarray ) do
-		if f( iarray[i], i, iarray ) then
+function fn.any( self, f )
+	for i = 1, fn.len( self ) do
+		if f( self[i], i, self ) then
 			return true
 		end
 	end
 	return false
 end
 	
-function fn.filter( iarray, p )
-	local oarray, j = {}, 0
-	for i = 1, fn.len( iarray ) do
-		if p( iarray[i], i, iarray ) then
+function fn.filter( self, p )
+	local result, j = fn.wrap{}, 0
+	for i = 1, fn.len( self ) do
+		if p( self[i], i, self ) then
 			j = j + 1
-			oarray[j] = iarray[i]
+			result[j] = self[i]
 		end
 	end
-	return fn.wrap( oarray )
+	return result
 end
 
-function fn.map( iarray, f )
-	local oarray = fn.wrap{}		
-	for i = 1, fn.len( iarray ) do
-		oarray[i] = f( iarray[i], i, iarray )
+function fn.map( self, f )
+	local result = fn.wrap{}		
+	for i = 1, fn.len( self ) do
+		result[i] = f( self[i], i, self )
 	end
-	return oarray
+	return result
 end
 
-function fn.keys( itable )
-	local oarray, i = fn.wrap{}, 0
-	for k, _ in pairs( itable ) do
+function fn.keys( self )
+	local result, i = fn.wrap{}, 0
+	for k, _ in pairs( self ) do
 		i = i + 1
-		oarray[i] = k
+		result[i] = k
 	end
-	return oarray
+	return result
 end
 
-function fn.values( itable )
-	local oarray, i = fn.wrap{}, 0
-	for _, v in pairs( itable ) do
+function fn.values( self )
+	local result, i = fn.wrap{}, 0
+	for _, v in pairs( self ) do
 		i = i + 1
-		oarray[i] = v
+		result[i] = v
 	end
-	return oarray
+	return result
 end
 
-function fn.copy( itable )
-	if type( itable ) == 'table' then
-		local otable = fn.wrap{}
-		for k, v in pairs( itable ) do
-			otable[k] = v
+function fn.copy( self )
+	if type( self ) == 'table' then
+		local result = fn.wrap{}
+		for k, v in pairs( self ) do
+			result[k] = v
 		end
-		return otable
+		return result
 	else
-		return itable
+		return self
 	end
 end
 
-function fn.sort( iarray, cmp )
-	local oarray = fn.copy( iarray )
-	table.sort( oarray, cmp )
-	return oarray
+function fn.sort( self, cmp )
+	local result = fn.copy( self )
+	table.sort( result, cmp )
+	return result
 end
 
-function fn.indexof( iarray, v, cmp )
+function fn.indexof( self, v, cmp )
 	if not cmp then
-		for i = 1, fn.len( iarray ) do
-			if iarray[i] == v then
+		for i = 1, fn.len( self ) do
+			if self[i] == v then
 				return i
 			end
 		end
 	else
 		assert( type( cmp ) == 'function', '3rd argument should be nil for linear search and comparator for binary search' )
-		local init, limit = 1, fn.len( iarray )
+		local init, limit = 1, fn.len( self )
 		local floor = math.floor
 		while init <= limit do
 			local mid = floor( 0.5*(init+limit))
-			local v_ = iarray[mid]
+			local v_ = self[mid]
 			if v == v_ then return mid
 			elseif cmp( v, v_ ) then limit = mid - 1
 			else init = mid + 1
@@ -419,89 +461,88 @@ function fn.indexof( iarray, v, cmp )
 	end
 end
 
-function fn.find( iarray, p )
-	for i = 1, fn.len( iarray ) do
-		if p( iarray[i], i, iarray ) then
-			return iarray[i], i
+function fn.find( self, p )
+	for i = 1, fn.len( self ) do
+		if p( self[i], i, self ) then
+			return self[i], i
 		end
 	end
 end
 
-function fn.ipairs( iarray )
-	local oarray = {}
-	for i = 1, fn.len( iarray ) do
-		oarray[i] = {i,iarray[i]}
+function fn.ipairs( self )
+	local result = {}
+	for i = 1, fn.len( self ) do
+		result[i] = {i,self[i]}
 	end
-	return fn.wrap( oarray )
+	return fn.wrap( result )
 end
 
-function fn.sortedpairs( itable, lt )
+function fn.sortedpairs( self, lt )
 	local sortedkeys, i = {}, 0
-	for k, _ in pairs( itable ) do
+	for k, _ in pairs( self ) do
 		i = i + 1
 		sortedkeys[i] = k
 	end
 	table.sort( sortedkeys, lt or ltall )
-	local oarray = fn.wrap{}
+	local result = fn.wrap{}
 	for j = 1, i do
 		local k = sortedkeys[j]
-		oarray[j] = {k,itable[k]}
+		result[j] = {k,self[k]}
 	end
-	return oarray
+	return result
 end
 
-function fn.pairs( itable )
-	local oarray, i = fn.wrap{}, 0
-	for k, v in pairs( itable ) do
+function fn.pairs( self )
+	local result, i = fn.wrap{}, 0
+	for k, v in pairs( self ) do
 		i = i + 1
-		oarray[i] = {k,v}
+		result[i] = {k,v}
 	end
-	return oarray
+	return result
 end
 
-function fn.frompairs( iarray )
-	local otable = fn.wrap{}
-	for i = 1, fn.len( iarray ) do
-		otable[iarray[i][1]] = iarray[i][2]
+function fn.frompairs( self )
+	local result = fn.wrap{}
+	for i = 1, fn.len( self ) do
+		result[self[i][1]] = self[i][2]
 	end
-	return otable
+	return result
 end
 
-function fn.update( itable, utable )
-	local otable = fn.copy( itable )
+function fn.update( self, utable )
+	local result = fn.copy( self )
 	for k, v in pairs( utable ) do
 		if v == fn.NIL then
-			otable[k] = nil
+			result[k] = nil
 		else
-			otable[k] = v
+			result[k] = v
 		end
 	end
-	return otable
+	return result
 end
 
-function fn.unique( iarray )
-	local oarray, uniq, j = fn.wrap{}, {}, 0 
-	for i = 1, fn.len( iarray ) do
-		local v = iarray[i]
+function fn.unique( self )
+	local result, uniq, j = fn.wrap{}, {}, 0 
+	for i = 1, fn.len( self ) do
+		local v = self[i]
 		if not uniq[v] then
 			j = j + 1
 			uniq[v] = true
-			oarray[j] = v
+			result[j] = v
 		end
 	end
-	return oarray
+	return result
 end
 
-function fn.nkeys( itable )
+function fn.nkeys( self )
 	local n = 0
-	for _ in pairs( itable ) do
+	for _ in pairs( self ) do
 		n = n + 1
 	end
 	return n
 end
 
-function fn.range( init_, limit_, step_ )
-	local init, limit, step = init_, limit_, step_
+function fn.range( init, limit, step )
 	local array = fn.wrap{}
 	if not limit then
 		if init == 0 then
@@ -562,6 +603,59 @@ local function equal( a, b )
 end
 
 fn.equal = equal
+
+function fn.chars( str, pattern )
+	local result, i = fn.wrap{}, 0
+	for char in str:gmatch( pattern or "([%z\1-\127\194-\244][\128-\191]*)" ) do
+		i = i + 1
+		result[i] = char
+	end
+	return result
+end
+
+function fn.rep( self, n, sep )
+	local result, m, k = fn.wrap{}, fn.len( self ), 0
+	for i = 1, n do
+		for j = 1, m do
+			k = k + 1
+			result[k] = self[j]
+		end
+		if i < n and sep then
+			k = k + 1
+			result[k] = sep
+		end
+	end
+	return result
+end
+
+function fn.zip( self, ... )
+	local n = select( '#', ... ) + 1
+	if n == 1 then
+		return self
+	else
+		local result, lists, j = fn.wrap{}, {self,...}, 0
+		for i = 1, #lists[1] do
+			local zipped = {}
+			for j = 1, n do
+				zipped[j] = lists[j][i]
+			end
+			result[i] = zipped
+		end
+		return result
+	end
+end
+
+function fn.unzip( self )
+	local n, m, result = #self, #self[1], fn.wrap{}
+	for i = 1, m do
+		local unzipped = {}
+		for j = 1, n do
+			unzipped[j] = self[j][i]
+		end
+		result[i] = unzipped
+	end
+	return result
+end
 
 return setmetatable( fn, {__call = function(_,t)
 	if type( t ) == 'table' then
