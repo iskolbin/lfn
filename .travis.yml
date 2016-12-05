@@ -3,9 +3,9 @@ sudo: false
 language: lua
 
 before_install:
-  - sudo apt-get install luajit
-  - sudo apt-get install lua5.2
-  - sudo apt-get install lua5.1
+  - apt install luajit
+  - apt install lua5.2
+  - apt install lua5.1
 
 before_script:
 
