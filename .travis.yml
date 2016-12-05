@@ -5,8 +5,6 @@ language: lua
 before_install:
   - sudo apt install luajit lua5.1 lua5.2
 
-before_script:
-
 script:
   - lua5.1 test.lua
   - lua5.2 test.lua
