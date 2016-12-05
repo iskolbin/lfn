@@ -1,4 +1,4 @@
-[Build Status](https://travis-ci.org/iskolbin/lfn.svg?branch=master)
+[![Build Status](https://travis-ci.org/iskolbin/lfn.svg?branch=master)]
 
 Lua functional library
 ======================
