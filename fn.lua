@@ -606,11 +606,15 @@ fn.equal = equal
 
 function fn.chars( str, pattern )
 	local result, i = fn.wrap{}, 0
-	for char in str:gmatch( pattern or "([%z\1-\127\194-\244][\128-\191]*)" ) do
+	for char in str:gmatch( pattern or "." ) do
 		i = i + 1
 		result[i] = char
 	end
 	return result
+end
+
+function fn.utf8( str )
+	return fn.chars( str, "([%z\1-\127\194-\244][\128-\191]*)" )
 end
 
 function fn.rep( self, n, sep )

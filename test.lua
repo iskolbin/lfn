@@ -165,9 +165,9 @@ end
 
 assertq( qsort{1, 2, 3, 1, 2, 3, -1, -2, -3}, {-3, -2, -1, 1, 1, 2, 2, 3, 3} )
 assertq( fn.chars'Baroque':reverse():concat(), ('Baroque'):reverse())
-assertq( fn.chars'Шаломчик':reverse():concat(), 'кичмолаШ' )
-assertq( fn.chars'Вариация':len(), 8 )
-assertq( fn.chars('Вариация','.'):len(), string.len( 'Вариация' ))
+assertq( fn.utf8'Шаломчик':reverse():concat(), 'кичмолаШ' )
+assertq( fn.utf8'Вариация':len(), 8 )
+assertq( fn.chars'Вариация':len(), string.len( 'Вариация' ))
 assertq( fn{1,2,3}:rep(3), {1,2,3,1,2,3,1,2,3} )
 assertq( fn{1,2,3}:rep(3,'x'), {1,2,3,'x',1,2,3,'x',1,2,3} )
 assertq( fn{1,2,3,4,5}:merge( {6,7,8}, fn.lt ), {1,2,3,4,5,6,7,8} )

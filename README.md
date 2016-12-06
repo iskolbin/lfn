@@ -27,8 +27,9 @@ Usage
 * `fn.range( limit )` creates range from 1 to `limit > 0` or from -1 to `limit < 0`, with helper metatable set, for `limit == 0` returns empty array
 * `fn.range( init, limit )` creates range from `init` to `limit` with helper metatable set, it's ok if `limit < init`
 * `fn.range( init, limit, step )` creates range from `init` to `limit` by `step` with helper metatable set
-* `fn.chars( string )` creates array with UTF-8 chars extracted from `string`
-* `fn.chars( string, pattern )` creates array with substrings from `string` extracted using `pattern`. To get all chars just as is use `"."` pattern
+* `fn.utf8( string )` creates array with UTF-8 chars extracted from `string`
+* `fn.chars( string )` creates array with 8-bit chars extracted from `string`
+* `fn.chars( string, pattern )` creates array with substrings from `string` extracted using `pattern`
 
 Array transforms
 ----------------
