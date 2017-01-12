@@ -1,6 +1,24 @@
--- Lua functional library
--- created by Ilya Kolbin (iskolbin@gmail.com)
--- originally hosted at github.com/iskolbin/lfn
+--[[
+
+ fn - v1.0.0 - public domain Lua functional library
+ no warranty implied; use at your own risk
+
+ author: Ilya Kolbin (iskolbin@gmail.com)
+ url: github.com/iskolbin/lfn
+
+ See documentation in README file.
+
+ COMPATIBILITY
+
+ Lua 5.1, 5.2, 5.3, LuaJIT 1, 2
+
+ LICENSE
+
+ This software is dual-licensed to the public domain and under the following
+ license: you are granted a perpetual, irrevocable license to copy, modify,
+ publish, and distribute this file as you see fit.
+
+--]]
 
 local fn = {
 	ID_PATTERN = '^[%a_][%w_]*$',

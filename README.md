@@ -1,4 +1,5 @@
 ![Build Status](https://travis-ci.org/iskolbin/lfn.svg?branch=master)
+[![license](https://img.shields.io/badge/license-public%20domain-blue.svg)]()
 
 Lua functional library
 ======================
