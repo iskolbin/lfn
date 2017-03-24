@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.0.0 - public domain Lua functional library
+ fn - v1.0.1 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -100,7 +100,7 @@ fn.mem = (function()
 		if not fcache[i] then
 			fcache[i] = setmetatable( {}, {__mode = 'kv'} )
 		end
-		cache = fcache[i]
+		local cache = fcache[i]
 		local fs = cache[f]
 		if not cache[f] then
 			fs = setmetatable( {}, {__mode = 'kv'} )		
@@ -198,6 +198,7 @@ end
 
 function fn.foldl( self, f, acc )
 	for i = 1, fn.len( self ) do
+		local stop
 		acc, stop = f( self[i], acc, i, self )
 		if stop then
 			return acc
@@ -208,6 +209,7 @@ end
 
 function fn.foldr( self, f, acc )
 	for i = fn.len( self ), 1, -1 do
+		local stop
 		acc, stop = f( self[i], acc, i, self )
 		if stop then
 			return acc
@@ -305,14 +307,14 @@ function fn.merge( self, list, lt )
 			end
 		end
 		if j > n then
-			for k = k, m do
+			for k_ = k, m do
 				i = i + 1
-				result[i] = list[k]
+				result[i] = list[k_]
 			end
 		elseif k > m then
-			for j = j, n do
+			for j_ = j, n do
 				i = i + 1
-				result[i] = self[j]
+				result[i] = self[j_]
 			end
 		end
 		return result
@@ -501,7 +503,7 @@ function fn.sortedpairs( self, lt )
 		i = i + 1
 		sortedkeys[i] = k
 	end
-	table.sort( sortedkeys, lt or ltall )
+	table.sort( sortedkeys, lt or fn.ltall )
 	local result = fn.wrap{}
 	for j = 1, i do
 		local k = sortedkeys[j]
@@ -655,7 +657,7 @@ function fn.zip( self, ... )
 	if n == 1 then
 		return self
 	else
-		local result, lists, j = fn.wrap{}, {self,...}, 0
+		local result, lists = fn.wrap{}, {self,...}
 		for i = 1, #lists[1] do
 			local zipped = {}
 			for j = 1, n do
