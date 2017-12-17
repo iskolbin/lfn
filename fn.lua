@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.0.1 - public domain Lua functional library
+ fn - v1.2.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -24,6 +24,7 @@ local fn = {
 	ID_PATTERN = '^[%a_][%w_]*$',
 	NIL = {},
 	_ = {},
+	UTF8_PATTERN = "([%z\1-\127\194-\244][\128-\191]*)"
 }
 
 local setmetatable, getmetatable, type, pairs, tostring = setmetatable, getmetatable, type, pairs, tostring
@@ -32,7 +33,7 @@ function fn.len( a )
 	return #a 
 end
 
-function fn.proxy( ... ) return ... end
+function fn.identity( ... ) return ... end
 function fn.truth() return true end
 function fn.lie() return false end
 function fn.neg( a ) return -a end
@@ -73,86 +74,14 @@ function fn.isthread( a ) return type( a ) == 'thread' end
 function fn.isid( a ) return type( a ) == 'string' and a:match( fn.ID_PATTERN ) ~= nil end
 function fn.isempty( a ) return next( a ) == nil end
 
-fn.comp = (function()
-	local cache = setmetatable( {}, {__mode = 'kv'} )
-	return function( f, g ) 
-		local fs = cache[f]
-		if not cache[f] then
-			fs = setmetatable( {}, {__mode = 'kv'} )		
-			cache[f] = fs
-		end
-		local gs = fs[g]
-		if not gs then
-			gs = function(...) 
-				return f( g(...) )
-			end
-			fs[g] = gs
-		end
-		return gs
-	end
-end)()
-
-fn.mem = (function()
-	local fcache = {}
-	return function( f, v, i )
-		i = i or 1
-		assert( i >= 1 )
-		if not fcache[i] then
-			fcache[i] = setmetatable( {}, {__mode = 'kv'} )
-		end
-		local cache = fcache[i]
-		local fs = cache[f]
-		if not cache[f] then
-			fs = setmetatable( {}, {__mode = 'kv'} )		
-			cache[f] = fs
-		end
-		local vs = fs[v]
-		if not vs then
-			if i == 1 then vs = function(...) return f(v,...) end
-			elseif i == 2 then vs = function(a1,...) return f(a1,v,...) end
-			elseif i == 3 then vs = function(a1,a2,...) return f(a1,a2,v,...) end
-			elseif i == 4 then vs = function(a1,a2,a3,...) return f(a1,a2,a3,v,...) end
-			elseif i == 5 then vs = function(a1,a2,a3,a4,...) return f(a1,a2,a3,a4,v,...) end
-			elseif i == 6 then vs = function(a1,a2,a3,a4,a5,...) return f(a1,a2,a3,a4,a5,v,...) end
-			else vs = function(...)
-				local args = {...}
-				args[i] = v
-				return f(unpack(args))
-			end
-			end
-			fs[v] = vs
-		end
-		return vs
-	end
-end)()
-
-local function lcur( f, v ) return fn.mem( f, v ) end
-local function rcur( f, v ) return fn.mem( f, v, 2 ) end
-
-fn.lcur = setmetatable( {}, {
-	__index = function( _, fname ) return fn.mem( lcur, fn[fname] ) end,
-	__call = function( _, f, v ) return lcur( f, v ) end,
-})
-
-fn.rcur = setmetatable( {}, {
-	__index = function( _, fname ) return fn.mem( rcur, fn[fname] ) end,
-	__call = function( _, f, v ) return rcur( f, v ) end,
-})
-
-local function dotostring( arg, saved_, level_ )
+local function dotostring( arg, saved, level )
 	local t = type( arg )
-	local saved, level = saved_ or {n = 0, recursive = {}}, level_ or 0
-	if t == 'nil' or t == 'boolean' or t == 'number' or t == 'function' or t == 'userdata' or t == 'thread' then
-		return tostring( arg )
-	elseif t == 'string' then
-		if arg:match( fn.ID_PATTERN ) then
-			return arg
-		else
-			return ('%q'):format( arg )
-		end
-	else
+	if t == 'string' then
+		return ('%q'):format( arg )
+	elseif t == 'table' then
+		saved, level = saved or {n = 0, recursive = {}}, level or 0
 		if saved[arg] then
-			return '<table rec:' .. saved[arg] .. '>'
+			return ('{"RECURSION_%d"}'):format( saved[arg] )
 		else
 			saved.n = saved.n + 1
 			saved[arg] = saved.n
@@ -163,17 +92,24 @@ local function dotostring( arg, saved_, level_ )
 			local tret, nt = {}, 0
 			for k, v in pairs(arg) do
 				if not ret[k] then
-					isarray = false
 					nt = nt + 1
-					tret[nt] = (' '):rep(2*(level+1)) .. dotostring( k, saved, level+1 ) .. ': ' .. dotostring( v, saved, level+1 )
+					local key = k
+					if type( k ) ~= 'string' or not k:match( fn.ID_PATTERN ) then
+						key = '[' .. dotostring( k, saved, level+1 ) .. ']'
+					end
+					tret[nt] = (' '):rep(2*(level+1)) .. key .. ' = ' .. dotostring( v, saved, level+1 )
 				end
 			end
 			local retc, tretc = table.concat( ret, ',' ), table.concat( tret, ',\n' )
 			if tretc ~= '' then
-				tretc = '\n' .. tretc
+				tretc = '\n' .. tretc .. '\n' .. (' '):rep(2*(level)) .. '}'
+			else
+				tretc = '}'
 			end
-			return (isarray and '[%s%s%s]' or '{%s%s%s}'):format( retc, retc ~= '' and tretc ~= '' and ',' or '', tretc )
+			return ('{%s%s%s'):format( retc, retc ~= '' and tretc ~= '}' and ',' or '', tretc )
 		end
+	else
+		return tostring( arg )
 	end
 end
 
@@ -183,17 +119,6 @@ local fnmt = { __index = fn, __tostring = dotostring }
 
 function fn.wrap( t )
 	return setmetatable( t, fnmt )
-end
-
-function fn.ltall( a, b )
-	local t1, t2 = type( a ), type( b )
-	if t1 == t2 and (t1 == 'number' or t1 == 'string') then
-		return a < b
-	elseif t1 ~= t2 then
-		return t1 < t2
-	else
-		return tostring( a ) < tostring( b )
-	end
 end
 
 function fn.foldl( self, f, acc )
@@ -280,53 +205,6 @@ function fn.insert( self, pos, ... )
 	end
 end
 
-function fn.append( self, ... )
-	return fn.insert( self, -1, ... )
-end
-
-function fn.merge( self, list, lt )
-	local n, m = fn.len( self ), fn.len( list )
-	if n == 0 then
-		return list
-	elseif m == 0 then
-		return self
-	end
-	
-	local result
-	if lt then
-		result = fn.wrap{}
-		local i, j, k = 0, 1, 1
-		while j <= n and k <= m do
-			i = i + 1
-			if lt( self[j], list[k] ) then
-				result[i] = self[j]
-				j = j + 1
-			else
-				result[i] = list[k]
-				k = k + 1
-			end
-		end
-		if j > n then
-			for k_ = k, m do
-				i = i + 1
-				result[i] = list[k_]
-			end
-		elseif k > m then
-			for j_ = j, n do
-				i = i + 1
-				result[i] = self[j_]
-			end
-		end
-		return result
-	else
-		result = fn.copy( self )
-		for i = 1, m do
-			result[i+n] = list[i]
-		end
-	end
-	return result
-end
-
 function fn.remove( self, ... )
 	local result, j, toremove = fn.wrap{}, 0, {}
 	for i = 1, select( '#', ... ) do
@@ -386,18 +264,18 @@ function fn.count( self, p )
 	return n
 end
 
-function fn.all( self, f )
+function fn.all( self, p )
 	for i = 1, fn.len( self ) do
-		if not f( self[i], i, self ) then
+		if not p( self[i], i, self ) then
 			return false
 		end
 	end
 	return true
 end
 
-function fn.any( self, f )
+function fn.any( self, p )
 	for i = 1, fn.len( self ) do
-		if f( self[i], i, self ) then
+		if p( self[i], i, self ) then
 			return true
 		end
 	end
@@ -497,13 +375,13 @@ function fn.ipairs( self )
 	return fn.wrap( result )
 end
 
-function fn.sortedpairs( self, lt )
+function fn.sortedpairs( self, cmp )
 	local sortedkeys, i = {}, 0
 	for k, _ in pairs( self ) do
 		i = i + 1
 		sortedkeys[i] = k
 	end
-	table.sort( sortedkeys, lt or fn.ltall )
+	table.sort( sortedkeys, cmp )
 	local result = fn.wrap{}
 	for j = 1, i do
 		local k = sortedkeys[j]
@@ -587,15 +465,36 @@ fn.setmetatable = setmetatable
 fn.unpack = table.unpack or unpack
 fn.pack = table.pack or function(...) return {...} end
 
+function fn.plain( self )
+	return setmetatable( self, nil )
+end
+
 fn.lambda = (function()
 	local loadstring = loadstring or load
 	local cache = setmetatable( {}, {__mode = 'kv'} )
 	return function( code )
 		local f = cache[code]
 		if not f then
-			local args = assert( code:match( '^%b||' ), 'string lambda syntax is \'|<args>|<body>\'' )
-			local body = code:gsub( args,'' )
-			f = assert( loadstring( 'return function(' .. args:sub(2,-2) .. ') return ' .. body .. ' end' ))()
+			local maxarg, args = 0, {}
+			local body = code:gsub( '%@(%d+)', function( x )
+				local numx = tonumber( x )
+				if numx < 1 then
+					error( 'argument index of the shorhand lambda must be > 0, got ' .. x )
+				end
+				if tonumber( x ) > maxarg then
+					maxarg = tonumber( x )
+				end
+				return '__' .. x .. '__'
+			end )
+			local zeroindex
+			body, zeroindex = body:gsub( '%@', '__0__' )
+			if zeroindex > 0 then
+				args[1] = '__0__'
+			end
+			for i = 1, maxarg do
+				args[#args+1] = '__' .. i .. '__'
+			end
+			f = assert( loadstring(( 'return function(%s) return %s end' ):format( table.concat( args, ',' ), body )))()
 			cache[code] = f
 		end
 		return f
@@ -634,7 +533,7 @@ function fn.chars( str, pattern )
 end
 
 function fn.utf8( str )
-	return fn.chars( str, "([%z\1-\127\194-\244][\128-\191]*)" )
+	return fn.chars( str, fn.UTF8_PATTERN )
 end
 
 function fn.rep( self, n, sep )
@@ -658,7 +557,7 @@ function fn.zip( self, ... )
 		return self
 	else
 		local result, lists = fn.wrap{}, {self,...}
-		for i = 1, #lists[1] do
+		for i = 1, fn.len( lists[1] ) do
 			local zipped = {}
 			for j = 1, n do
 				zipped[j] = lists[j][i]
@@ -670,13 +569,21 @@ function fn.zip( self, ... )
 end
 
 function fn.unzip( self )
-	local n, m, result = #self, #self[1], fn.wrap{}
+	local n, m, result = fn.len( self ), fn.len( self[1] ), fn.wrap{}
 	for i = 1, m do
 		local unzipped = {}
 		for j = 1, n do
 			unzipped[j] = self[j][i]
 		end
 		result[i] = unzipped
+	end
+	return result
+end
+
+function fn.frequencies( self )
+	local result = fn.wrap{}
+	for i = 1, fn.len( self ) do
+		result[self[i]] = (result[self[i]] or 0) + 1
 	end
 	return result
 end

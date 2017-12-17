@@ -1,36 +1,20 @@
 ![Build Status](https://travis-ci.org/iskolbin/lfn.svg?branch=master)
 [![license](https://img.shields.io/badge/license-public%20domain-blue.svg)]()
 
+
 Lua functional library
 ======================
 
-```lua
--- Very inefficient but compact quicksort implementation
-
-local fn = require'fn'
-
-local function qsort( a )
-	if fn.len( a ) > 1 then
-		local pivot, tail = fn( a ):partition( fn'|x,i| i == 1' )
-		local left, right = tail:partition( fn.rcur.lt( pivot[1] ))
-		return qsort( left ):merge( pivot ):merge( qsort( right ))
-	else
-		return a
-	end
-end
-```
-
-Usage
------
-
 * `fn.copy( table )` makes a shallow copy of the `table` and set helper metatable to allow chain calls using `:` syntax
 * `fn.wrap( table )` set helper metatable directly, which overwrites current metatable of passed `table`
+* `fn.plain( table )` set metatable of `table` to `nil`
 * `fn.range( limit )` creates range from 1 to `limit > 0` or from -1 to `limit < 0`, with helper metatable set, for `limit == 0` returns empty array
 * `fn.range( init, limit )` creates range from `init` to `limit` with helper metatable set, it's ok if `limit < init`
 * `fn.range( init, limit, step )` creates range from `init` to `limit` by `step` with helper metatable set
 * `fn.utf8( string )` creates array with UTF-8 chars extracted from `string`
 * `fn.chars( string )` creates array with 8-bit chars extracted from `string`
 * `fn.chars( string, pattern )` creates array with substrings from `string` extracted using `pattern`
+
 
 Array transforms
 ----------------
@@ -44,9 +28,6 @@ Array transforms
 * `sub( array, init, limit, step )` create a slice of array from `init` to `limit` with `step`
 * `reverse( array )` reverses array
 * `insert( array, index, ... )` inserts values from before the specified `index`. If `index < 0` then place is counted from the end of `array`, i.e. `-1` is after the last item, `-2` is before the last item
-* `append( array, ... )` alias for `insert( array, -1, ...) `
-* `merge( array1, array2 )` appends `array2` items after `array1`
-* `merge( array1, array2, cmp )` create sorted array from 2 sorted arrays using `cmp` comparator
 * `remove( array, ... )` removes values from the `array`
 * `partition( array, p )` splits array into 2 parts by predicate `p(value,index,array) => boolean` and returns 2 arrays
 * `flatten( array )` flattens the array
@@ -57,6 +38,8 @@ Array transforms
 * `frompairs( array )` transforms array with pairs `{key,value}` to table
 * `zip( ... )` maps tuple of sequences into a sequence of tuples, i.e. `zip({a,b},{1,2},{x,y}) => {{a,1,x},{b,2,y}}`
 * `unzip( array )` maps sequence of tuples into tuple of sequences
+* `frequencies( array )` return table filled with count of occurencies of specific item
+
 
 Table transforms
 ----------------
@@ -66,6 +49,7 @@ Table transforms
 * `pairs( table )` returns array filled with table pairs `{key,value}`
 * `sortedpairs( table )` returns array filled with table pairs `{key,value}` sorted by `fn.ltall` predicate
 * `update( table, upd )` updates `table` content from the `upd` table, adding new values, to delete table entry one need to pass `fn.NIL` value
+
 
 Folds
 -----
@@ -80,20 +64,32 @@ Folds
 * `indexof( array, value, cmp )` binary search of the `value` in the sorted `array` with `cmp` ordering
 * `find( array, p )` linear search of the value which holds `p( value, index, array ) => bool`
 * `nkeys( table )` returns total count of keys in `table`
-* `equal( v1, v2 )` checks `v1` and `v2` on deep equality, tables are supported but without table keys, also you can use `fn._` as the wildcard
+* `equal( v1, v2 )` checks `v1` and `v2` on deep equality, nested tables are supported but without table keys (except some simple cases), also you can use `fn._` as the wildcard
 * `tostring( v )` returns jsony like representation of passed value
 * `concat` == `table.concat`
 * `unpack` == `table.unpack`
-* `setmetatable` == `setmetatable`
-* `fn.pack` == `table.pack or {...}`
+* `setmetatable( mt )` == `setmetatable`
+* `pack` == `table.pack or {...}`
 
 String lambda
 -------------
 
-* `fn.lambda( source )`, create simple string lambda from `source` which has form `|<args>|<body expression` which transforms into
+* `fn.lambda( source )`, create simple string lambda from `source` which has numbered arguments with @ prefix, i.e. `@1`, `@2` and so on which transforms into single expression.
 ```lua
-function(<args>)
-	return <body expression>
+local lt = fn.lambda[[@1 < @2]]
+-- compiles to
+local lt = function(__1__,__2__)
+	return __1__ < __2__
+end
+```
+
+You can also use zeroth argument without index:
+
+```lua
+local add2 = fn.lambda[[@+2]]
+-- compiles to
+local add2 = function(__0__)
+	return __0__+2
 end
 ```
 
