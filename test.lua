@@ -180,3 +180,6 @@ assertq( fn.equal( {[true] = 1}, {[true] = 1} ), true )
 assertq( fn{1,2,3,4}:foldl( fn[[@1+@2,@3 == 3]], 0 ), 6 )
 assertq( fn{1,2,3,4}:foldl( fn[[@+@2,@3 == 3]], 0 ), 6 )
 assertq( fn{1,2,3,4}:foldr( fn[[@1+@2,@3 == 3]], 0 ), 7 )
+local x = {}
+x[x] = x
+assertq( x, x )
