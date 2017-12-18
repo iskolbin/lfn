@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.3.0 - public domain Lua functional library
+ fn - v1.3.1 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -475,10 +475,7 @@ fn.lambda = (function()
 	return function( code, ... )
 		local curried = select( '#', ... )
 		local fs = cache[curried]
-		if not fs then
-			cache[curried] = {}
-		end
-		local fc = cache[curried][code]
+		local fc = fs and fs[code]
 		if not fc then
 			local maxarg, args = 0, {}
 			local body = code:gsub( '%@(%d+)', function( x )
@@ -506,7 +503,11 @@ fn.lambda = (function()
 			if curried == 0 then
 				fc = fc()
 			end
-			cache[curried][code] = fc
+			if not fs then
+				cache[curried] = { [code] = fc }
+			else
+				cache[curried][code] = fc
+			end
 		end
 		if curried == 0 then
 			return fc
