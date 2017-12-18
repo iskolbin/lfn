@@ -83,13 +83,22 @@ local lt = function(__1__,__2__)
 end
 ```
 
-You can also use zeroth argument without index:
+You can also use first argument without index:
 
 ```lua
-local add2 = fn.lambda[[@+2]]
--- compiles to
-local add2 = function(__0__)
-	return __0__+2
+local add2 = function(__1__)
+	return __1__+2
+end
+```
+
+Varargs is used for partial application:
+
+```lua
+local lt2 = fn.lambda([[@2 < @1]], 2 )
+-- compiles to (something like, its closure actually)
+local __1__ = 2
+lt2 = function(__2__)
+	return __2__ < __1__
 end
 ```
 

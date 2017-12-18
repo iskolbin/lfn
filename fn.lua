@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.2.0 - public domain Lua functional library
+ fn - v1.3.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -472,32 +472,47 @@ end
 fn.lambda = (function()
 	local loadstring = loadstring or load
 	local cache = setmetatable( {}, {__mode = 'kv'} )
-	return function( code )
-		local f = cache[code]
-		if not f then
+	return function( code, ... )
+		local curried = select( '#', ... )
+		local fs = cache[curried]
+		if not fs then
+			cache[curried] = {}
+		end
+		local fc = cache[curried][code]
+		if not fc then
 			local maxarg, args = 0, {}
 			local body = code:gsub( '%@(%d+)', function( x )
 				local numx = tonumber( x )
-				if numx < 1 then
-					error( 'argument index of the shorhand lambda must be > 0, got ' .. x )
-				end
 				if tonumber( x ) > maxarg then
 					maxarg = tonumber( x )
 				end
 				return '__' .. x .. '__'
 			end )
-			local zeroindex
-			body, zeroindex = body:gsub( '%@', '__0__' )
-			if zeroindex > 0 then
-				args[1] = '__0__'
-			end
-			for i = 1, maxarg do
+			body, noindexarg = body:gsub( '%@', '__1__' )
+			for i = 1, math.max( maxarg, curried, noindexarg == 0 and 0 or 1 ) do
 				args[#args+1] = '__' .. i .. '__'
 			end
-			f = assert( loadstring(( 'return function(%s) return %s end' ):format( table.concat( args, ',' ), body )))()
-			cache[code] = f
+
+			local curriedargs = curried > 0 and
+				('local %s = ...\n'):format(table.concat( args, ',', 1, curried ))
+				or ''
+
+			local gencode = ('%sreturn function(%s) return %s end'):format(
+				curriedargs,
+				table.concat( args, ',', curried+1 ),
+				body )
+
+			fc = assert( loadstring( gencode ))
+			if curried == 0 then
+				fc = fc()
+			end
+			cache[curried][code] = fc
 		end
-		return f
+		if curried == 0 then
+			return fc
+		else
+			return fc( ... )
+		end
 	end
 end)()
 
@@ -588,11 +603,11 @@ function fn.frequencies( self )
 	return result
 end
 
-return setmetatable( fn, {__call = function(_,t)
+return setmetatable( fn, {__call = function( _, t, ... )
 	if type( t ) == 'table' then
 		return fn.copy( t )
 	elseif type( t ) == 'string' then
-		return fn.lambda( t )
+		return fn.lambda( t, ... )
 	else
 		error( 'fn accepts tables or strings as arguments' )
 	end
