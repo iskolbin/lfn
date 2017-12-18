@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.3.1 - public domain Lua functional library
+ fn - v1.3.2 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -32,6 +32,8 @@ local setmetatable, getmetatable, type, pairs, tostring = setmetatable, getmetat
 function fn.len( a )
 	return #a 
 end
+
+local len = fn.len
 
 function fn.identity( ... ) return ... end
 function fn.truth() return true end
@@ -85,7 +87,7 @@ local function dotostring( arg, saved, level )
 		else
 			saved.n = saved.n + 1
 			saved[arg] = saved.n
-			local isarray, ret, na = true, {}, fn.len( arg )
+			local isarray, ret, na = true, {}, len( arg )
 			for i = 1, na do
 				ret[i] = dotostring( arg[i], saved, level )
 			end
@@ -122,7 +124,7 @@ function fn.wrap( t )
 end
 
 function fn.foldl( self, f, acc )
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		local stop
 		acc, stop = f( self[i], acc, i, self )
 		if stop then
@@ -133,7 +135,7 @@ function fn.foldl( self, f, acc )
 end
 
 function fn.foldr( self, f, acc )
-	for i = fn.len( self ), 1, -1 do
+	for i = len( self ), 1, -1 do
 		local stop
 		acc, stop = f( self[i], acc, i, self )
 		if stop then
@@ -145,7 +147,7 @@ end
 	
 function fn.sum( self, acc )
 	acc = acc or 0
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		acc = self[i] + acc
 	end
 	return acc
@@ -154,10 +156,10 @@ end
 function fn.shuffle( self, rand )
 	rand = rand or math.random
 	local result = fn.wrap{}
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		result[i] = self[i]
 	end
-	for i = fn.len( self ), 1, -1 do
+	for i = len( self ), 1, -1 do
 		local j = rand( 1, i )
 		result[j], result[i] = result[i], result[j]
 	end
@@ -165,15 +167,15 @@ function fn.shuffle( self, rand )
 end
 
 function fn.sub( self, init, limit, step )
-	local len = fn.len( self )
-	init, limit, step = init, limit or len, step or 1
+	local n = len( self )
+	init, limit, step = init, limit or n, step or 1
 	if init < 0 then 
-		init = len + init + 1
+		init = n + init + 1
 	end
 	if limit < 0 then 
-		limit = len + limit + 1
+		limit = n + limit + 1
 	end
-	init, limit = math.max( 1, math.min( init, len )), math.max( 1, math.min( limit, len ))
+	init, limit = math.max( 1, math.min( init, n )), math.max( 1, math.min( limit, n ))
 	local result, j = fn.wrap{}, 0
 	for i = init, limit, step do
 		j = j + 1
@@ -183,7 +185,7 @@ function fn.sub( self, init, limit, step )
 end
 
 function fn.reverse( self )
-	local result, n = fn.wrap{}, fn.len( self ) + 1
+	local result, n = fn.wrap{}, len( self ) + 1
 	for i = n, 1, -1 do
 		result[n - i] = self[i]
 	end
@@ -191,7 +193,7 @@ function fn.reverse( self )
 end
 
 function fn.insert( self, pos, ... )
-	local n, m = fn.len( self ), select( '#', ... )
+	local n, m = len( self ), select( '#', ... )
 	if m == 0 then
 		return self
 	else
@@ -210,7 +212,7 @@ function fn.remove( self, ... )
 	for i = 1, select( '#', ... ) do
 		toremove[select( i, ... )] = true
 	end
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		local v = self[i]
 		if not toremove[v] then
 			j = j + 1
@@ -222,7 +224,7 @@ end
 
 function fn.partition( self, p )
 	local result1, result2, j, k = fn.wrap{}, fn.wrap{}, 0, 0
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			j = j + 1
 			result1[j] = self[i]
@@ -236,8 +238,8 @@ end
 
 local function doflatten( t, v, index )
 	if type( v ) == 'table' then
-		for k = 1, fn.len( v ) do 
-			index = doflatten( t, v[k], index ) 
+		for k = 1, len( v ) do
+			index = doflatten( t, v[k], index )
 		end
 	else
 		index = index + 1
@@ -248,7 +250,7 @@ end
 
 function fn.flatten( self )
 	local result, j = fn.wrap{}, 0
-	for i = 1, fn.len( self ) do 
+	for i = 1, len( self ) do 
 		j = doflatten( result, self[i], j ) 
 	end
 	return result
@@ -256,7 +258,7 @@ end
 
 function fn.count( self, p )
 	local n = 0
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			n = n + 1
 		end
@@ -265,7 +267,7 @@ function fn.count( self, p )
 end
 
 function fn.all( self, p )
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		if not p( self[i], i, self ) then
 			return false
 		end
@@ -274,7 +276,7 @@ function fn.all( self, p )
 end
 
 function fn.any( self, p )
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			return true
 		end
@@ -284,7 +286,7 @@ end
 	
 function fn.filter( self, p )
 	local result, j = fn.wrap{}, 0
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			j = j + 1
 			result[j] = self[i]
@@ -295,7 +297,7 @@ end
 
 function fn.map( self, f )
 	local result = fn.wrap{}		
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		result[i] = f( self[i], i, self )
 	end
 	return result
@@ -339,14 +341,14 @@ end
 
 function fn.indexof( self, v, cmp )
 	if not cmp then
-		for i = 1, fn.len( self ) do
+		for i = 1, len( self ) do
 			if self[i] == v then
 				return i
 			end
 		end
 	else
 		assert( type( cmp ) == 'function', '3rd argument should be nil for linear search and comparator for binary search' )
-		local init, limit = 1, fn.len( self )
+		local init, limit = 1, len( self )
 		local floor = math.floor
 		while init <= limit do
 			local mid = floor( 0.5*(init+limit))
@@ -360,7 +362,7 @@ function fn.indexof( self, v, cmp )
 end
 
 function fn.find( self, p )
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			return self[i], i
 		end
@@ -369,7 +371,7 @@ end
 
 function fn.ipairs( self )
 	local result = {}
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		result[i] = {i,self[i]}
 	end
 	return fn.wrap( result )
@@ -401,7 +403,7 @@ end
 
 function fn.frompairs( self )
 	local result = fn.wrap{}
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		result[self[i][1]] = self[i][2]
 	end
 	return result
@@ -421,7 +423,7 @@ end
 
 function fn.unique( self )
 	local result, uniq, j = fn.wrap{}, {}, 0 
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		local v = self[i]
 		if not uniq[v] then
 			j = j + 1
@@ -553,7 +555,7 @@ function fn.utf8( str )
 end
 
 function fn.rep( self, n, sep )
-	local result, m, k = fn.wrap{}, fn.len( self ), 0
+	local result, m, k = fn.wrap{}, len( self ), 0
 	for i = 1, n do
 		for j = 1, m do
 			k = k + 1
@@ -573,7 +575,7 @@ function fn.zip( self, ... )
 		return self
 	else
 		local result, lists = fn.wrap{}, {self,...}
-		for i = 1, fn.len( lists[1] ) do
+		for i = 1, len( lists[1] ) do
 			local zipped = {}
 			for j = 1, n do
 				zipped[j] = lists[j][i]
@@ -585,7 +587,7 @@ function fn.zip( self, ... )
 end
 
 function fn.unzip( self )
-	local n, m, result = fn.len( self ), fn.len( self[1] ), fn.wrap{}
+	local n, m, result = len( self ), len( self[1] ), fn.wrap{}
 	for i = 1, m do
 		local unzipped = {}
 		for j = 1, n do
@@ -598,7 +600,7 @@ end
 
 function fn.frequencies( self )
 	local result = fn.wrap{}
-	for i = 1, fn.len( self ) do
+	for i = 1, len( self ) do
 		result[self[i]] = (result[self[i]] or 0) + 1
 	end
 	return result
