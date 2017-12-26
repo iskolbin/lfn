@@ -183,3 +183,11 @@ assertq( fn{1,2,3,4}:foldr( fn[[@1+@2,@3 == 3]], 0 ), 7 )
 local x = {}
 x[x] = x
 assertq( x, x )
+assertq( fn{1,2,3,4}:chunk(), {1,2,3,4} )
+assertq( fn{1,2,3,4}:chunk(1), {{1},{2},{3},{4}} )
+assertq( fn{1,2,3,4}:chunk(2), {{1,2},{3,4}} )
+assertq( fn{1,2,3,4}:chunk(3), {{1,2,3},{4}} )
+assertq( fn{1,2,3,4}:chunk(4), {{1,2,3,4}} )
+assertq( fn{1,2,3,4}:chunk(1):flatten(), {1,2,3,4} )
+assertq( fn{1,2,3,4,5}:chunk(1,2), {{1},{2,3},{4},{5}} )
+assertq( fn{1,2,3,4,5,6,7}:chunk(1,2,3), {{1},{2,3},{4,5,6},{7}} )

@@ -39,6 +39,7 @@ Array transforms
 * `zip( ... )` maps tuple of sequences into a sequence of tuples, i.e. `zip({a,b},{1,2},{x,y}) => {{a,1,x},{b,2,y}}`
 * `unzip( array )` maps sequence of tuples into tuple of sequences
 * `frequencies( array )` return table filled with count of occurencies of specific item
+* `chunk( array, ... )` returns array partitioned on chunks of passed size
 
 
 Table transforms

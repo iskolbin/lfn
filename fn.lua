@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.3.2 - public domain Lua functional library
+ fn - v1.4.2 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -76,20 +76,28 @@ function fn.isthread( a ) return type( a ) == 'thread' end
 function fn.isid( a ) return type( a ) == 'string' and a:match( fn.ID_PATTERN ) ~= nil end
 function fn.isempty( a ) return next( a ) == nil end
 
-local function dotostring( arg, saved, level )
-	local t = type( arg )
+local function defaultrec( arg, options, saved, level )
+	return ('{"RECURSION_%d"}'):format( saved[arg] )
+end
+
+fn.DEFAULT_TOSTRING = { ident = '  ', lsep = '\n', kvsep = ' = ', rec = defaultrec }
+fn.COMPACT_TOSTRING = { ident = '', lsep = '', kvsep = '=', rec = defaultrec }
+
+local function dotostring( arg, options, saved, level )
+	local t, options = type( arg ), options or fn.DEFAULT_TOSTRING
 	if t == 'string' then
 		return ('%q'):format( arg )
 	elseif t == 'table' then
 		saved, level = saved or {n = 0, recursive = {}}, level or 0
 		if saved[arg] then
-			return ('{"RECURSION_%d"}'):format( saved[arg] )
+			return (options.rec or fn.DEFAULT_TOSTRING.rec)( arg, options, saved, level )
 		else
+			local ident, lsep, kvsep = options.ident or fn.DEFAULT_TOSTRING.ident, options.lsep or fn.DEFAULT_TOSTRING.lsep, options.kvsep or fn.DEFAULT_TOSTRING.kvsep
 			saved.n = saved.n + 1
 			saved[arg] = saved.n
-			local isarray, ret, na = true, {}, len( arg )
+			local ret, na = {}, len( arg )
 			for i = 1, na do
-				ret[i] = dotostring( arg[i], saved, level )
+				ret[i] = dotostring( arg[i], options, saved, level )
 			end
 			local tret, nt = {}, 0
 			for k, v in pairs(arg) do
@@ -97,14 +105,14 @@ local function dotostring( arg, saved, level )
 					nt = nt + 1
 					local key = k
 					if type( k ) ~= 'string' or not k:match( fn.ID_PATTERN ) then
-						key = '[' .. dotostring( k, saved, level+1 ) .. ']'
+						key = '[' .. dotostring( k, options, saved, level+1 ) .. ']'
 					end
-					tret[nt] = (' '):rep(2*(level+1)) .. key .. ' = ' .. dotostring( v, saved, level+1 )
+					tret[nt] = ident:rep(level+1) .. key .. kvsep .. dotostring( v, options, saved, level+1 )
 				end
 			end
-			local retc, tretc = table.concat( ret, ',' ), table.concat( tret, ',\n' )
+			local retc, tretc = table.concat( ret, ',' ), table.concat( tret, ',' .. lsep )
 			if tretc ~= '' then
-				tretc = '\n' .. tretc .. '\n' .. (' '):rep(2*(level)) .. '}'
+				tretc = lsep .. tretc .. lsep .. ident:rep(level) .. '}'
 			else
 				tretc = '}'
 			end
@@ -479,9 +487,8 @@ fn.lambda = (function()
 		local fs = cache[curried]
 		local fc = fs and fs[code]
 		if not fc then
-			local maxarg, args = 0, {}
+			local maxarg, args, noindexarg = 0, {}
 			local body = code:gsub( '%@(%d+)', function( x )
-				local numx = tonumber( x )
 				if tonumber( x ) > maxarg then
 					maxarg = tonumber( x )
 				end
@@ -604,6 +611,30 @@ function fn.frequencies( self )
 		result[self[i]] = (result[self[i]] or 0) + 1
 	end
 	return result
+end
+
+function fn.chunk( self, ... )
+	local n = select( '#', ... )
+	if n == 0 then
+		return self
+	else
+		local result, t = fn.wrap{}, {}
+		local j, k, kmodn, m = 1, 1, 1, select( 1, ... )
+		for i = 1, len( self ) do
+			t[j] = self[i]
+			if j >= m then
+				result[k] = t
+				kmodn, k, j, t = kmodn % n + 1, k + 1, 1, {}
+				m = select( kmodn, ... )
+			else
+				j = j + 1
+			end
+		end
+		if j > 1 then
+			result[k] = t
+		end
+		return result
+	end
 end
 
 return setmetatable( fn, {__call = function( _, t, ... )
