@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.4.2 - public domain Lua functional library
+ fn - v1.5.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -76,7 +76,7 @@ function fn.isthread( a ) return type( a ) == 'thread' end
 function fn.isid( a ) return type( a ) == 'string' and a:match( fn.ID_PATTERN ) ~= nil end
 function fn.isempty( a ) return next( a ) == nil end
 
-local function defaultrec( arg, options, saved, level )
+local function defaultrec( arg, _, saved, _ )
 	return ('{"RECURSION_%d"}'):format( saved[arg] )
 end
 
@@ -84,7 +84,8 @@ fn.DEFAULT_TOSTRING = { ident = '  ', lsep = '\n', kvsep = ' = ', rec = defaultr
 fn.COMPACT_TOSTRING = { ident = '', lsep = '', kvsep = '=', rec = defaultrec }
 
 local function dotostring( arg, options, saved, level )
-	local t, options = type( arg ), options or fn.DEFAULT_TOSTRING
+	local t = type( arg )
+	options = options or fn.DEFAULT_TOSTRING
 	if t == 'string' then
 		return ('%q'):format( arg )
 	elseif t == 'table' then
@@ -635,6 +636,54 @@ function fn.chunk( self, ... )
 		end
 		return result
 	end
+end
+
+function fn.intersection( self, ... )
+	local result, n = fn.wrap{}, select( '#', ... )
+	if n > 0 then
+		for k, v in pairs( self ) do
+			local intersection = true
+			for i = 1, n do
+				if select( i, ... )[k] == nil then
+					intersection = false
+					break
+				end
+			end
+			if intersection then
+				result[k] = v
+			end
+		end
+	end
+	return result
+end
+
+function fn.difference( self, ... )
+	local result, n = fn.wrap{}, select( '#', ... )
+	for k, v in pairs( self ) do
+		local unique = true
+		for i = 1, n do
+			if select( i, ... )[k] ~= nil then
+				unique = false
+				break
+			end
+		end
+		if unique then
+			result[k] = v
+		end
+	end
+	return result
+end
+
+function fn.union( self, ... )
+	local result = fn.copy( self )
+	for i = 1, select( '#', ... ) do
+		for k, v in pairs( select( i, ... )) do
+			if result[k] == nil then
+				result[k] = v
+			end
+		end
+	end
+	return result
 end
 
 return setmetatable( fn, {__call = function( _, t, ... )

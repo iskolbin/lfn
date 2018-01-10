@@ -27,8 +27,8 @@ Array transforms
 * `sub( array, init, limit )` create a slice of array from `init` to `limit`
 * `sub( array, init, limit, step )` create a slice of array from `init` to `limit` with `step`
 * `reverse( array )` reverses array
-* `insert( array, index, ... )` inserts values from before the specified `index`. If `index < 0` then place is counted from the end of `array`, i.e. `-1` is after the last item, `-2` is before the last item
-* `remove( array, ... )` removes values from the `array`
+* `insert( array, index, ...values )` inserts `values` from before the specified `index`. If `index < 0` then place is counted from the end of `array`, i.e. `-1` is after the last item, `-2` is before the last item
+* `remove( array, ...values )` removes `values` from the `array`
 * `partition( array, p )` splits array into 2 parts by predicate `p(value,index,array) => boolean` and returns 2 arrays
 * `flatten( array )` flattens the array
 * `sort( array )` sorts the `array` copy by `fn.lt` ordering and returns the result
@@ -36,10 +36,10 @@ Array transforms
 * `unique( array )` returns array without duplicate values
 * `ipairs( array )` returns array filled with array pairs `{index,value}`
 * `frompairs( array )` transforms array with pairs `{key,value}` to table
-* `zip( ... )` maps tuple of sequences into a sequence of tuples, i.e. `zip({a,b},{1,2},{x,y}) => {{a,1,x},{b,2,y}}`
+* `zip( ...arrays )` maps tuple of sequences into a sequence of tuples, i.e. `zip({a,b},{1,2},{x,y}) => {{a,1,x},{b,2,y}}`
 * `unzip( array )` maps sequence of tuples into tuple of sequences
 * `frequencies( array )` return table filled with count of occurencies of specific item
-* `chunk( array, ... )` returns array partitioned on chunks of passed size
+* `chunk( array, ...size )` returns array partitioned on chunks of passed size
 
 
 Table transforms
@@ -51,6 +51,12 @@ Table transforms
 * `sortedpairs( table )` returns array filled with table pairs `{key,value}` sorted by `fn.ltall` predicate
 * `update( table, upd )` updates `table` content from the `upd` table, adding new values, to delete table entry one need to pass `fn.NIL` value
 
+Set operations
+--------------
+
+* `difference( table, ...tables )` returns `table` without keys in `tables`
+* `intersection( table, ...tables )` returns `table` with keys which exist in all `tables`
+* `union( table, ...tables )` returns `table` merged with `tables`( values of `table` will not be overwritten )
 
 Folds
 -----
