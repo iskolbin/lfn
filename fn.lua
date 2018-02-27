@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.6.0 - public domain Lua functional library
+ fn - v1.6.1 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -20,9 +20,11 @@
 
 --]]
 
+local NIL = {}
+
 local fn = {
 	ID_PATTERN = '^[%a_][%w_]*$',
-	NIL = {},
+	NIL = NIL,
 	_ = {},
 	UTF8_PATTERN = "([%z\1-\127\194-\244][\128-\191]*)"
 }
@@ -421,7 +423,7 @@ end
 function fn.update( self, utable )
 	local result = fn.copy( self )
 	for k, v in pairs( utable ) do
-		if v == fn.NIL then
+		if v == NIL then
 			result[k] = nil
 		else
 			result[k] = v
@@ -700,7 +702,7 @@ local function dodiff( t, dt, res )
 			end
 			for k, v in pairs( t ) do
 				if dt[k] == nil then
-					res[k] = fn.NIL
+					res[k] = NIL
 				end
 			end
 			if next( res ) then
@@ -730,7 +732,7 @@ local function dopatch( t, dt )
 			end
 			for k, dv in pairs( dt ) do
 				local v = t[k]
-				if dv == fn.NIL then
+				if dv == NIL then
 					res[k] = nil
 				elseif v == nil then
 					res[k] = dv
