@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.5.0 - public domain Lua functional library
+ fn - v1.6.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -684,6 +684,74 @@ function fn.union( self, ... )
 		end
 	end
 	return result
+end
+
+local function dodiff( t, dt, res )
+	if t ~= dt then
+		local ttype = type( t )
+		if type( dt ) == 'table' and ttype == 'table' then
+			for k, dv in pairs( dt ) do
+				local v = t[k]
+				if v == nil then
+					res[k] = dv
+				elseif v ~= dv then
+					res[k] = dodiff( v, dv, {} )
+				end
+			end
+			for k, v in pairs( t ) do
+				if dt[k] == nil then
+					res[k] = fn.NIL
+				end
+			end
+			if next( res ) then
+				return res
+			end
+		else
+			return dt
+		end
+	end
+end
+
+function fn.diff( self, other )
+	if type( self ) == 'table' and type( other ) == 'table' then
+		return fn.wrap( dodiff( self, other, {} ) or {} )
+	else
+		return other
+	end
+end
+
+local function dopatch( t, dt )
+	if t ~= dt then
+		local ttype = type( t )
+		if type( dt ) == 'table' and ttype == 'table' then
+			local res = {}
+			for k, v in pairs( t ) do
+				res[k] = v
+			end
+			for k, dv in pairs( dt ) do
+				local v = t[k]
+				if dv == fn.NIL then
+					res[k] = nil
+				elseif v == nil then
+					res[k] = dv
+				elseif v ~= dv then
+					res[k] = dopatch( v, dv )
+				end
+			end
+			return res
+		else
+			return dt
+		end
+	end
+	return t
+end
+
+function fn.patch( self, other )
+	if type( self ) == 'table' and type( other ) == 'table' then
+		return fn.wrap( dopatch( self, other ))
+	else
+		return self
+	end
 end
 
 return setmetatable( fn, {__call = function( _, t, ... )

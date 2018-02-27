@@ -50,6 +50,9 @@ Table transforms
 * `pairs( table )` returns array filled with table pairs `{key,value}`
 * `sortedpairs( table )` returns array filled with table pairs `{key,value}` sorted by `fn.ltall` predicate
 * `update( table, upd )` updates `table` content from the `upd` table, adding new values, to delete table entry one need to pass `fn.NIL` value
+* `diff( table, table )` returns table with diff's (nested), if tables are equal returns an empty table; deleted fields marked as `fn.NIL`
+* `patch( table, table )` returns table with applied patch, merging two tables; to delete field one should pass `fn.NIL`; plays nice with `diff`
+
 
 Set operations
 --------------
