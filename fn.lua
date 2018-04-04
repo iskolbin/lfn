@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.6.1 - public domain Lua functional library
+ fn - v1.6.2 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
