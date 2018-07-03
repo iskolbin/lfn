@@ -471,7 +471,7 @@ fn.unpack = unpack
 fn.pack = table.pack or function(...) return {...} end
 
 fn.lambda = (function()
-	local loadstring = loadstring or load
+	local loadstring = _G.loadstring or load
 	local cache = setmetatable( {}, {__mode = 'kv'} )
 	return function( code, ... )
 		local curried = select( '#', ... )
