@@ -19,5 +19,5 @@ install:
   - luarocks install luacheck
 
 script:
-  - luacheck --no-unused-args --std *.lua
+  - luacheck --no-unused-args *.lua
   - lua test.lua
