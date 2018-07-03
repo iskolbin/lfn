@@ -25,18 +25,19 @@ local function defaultrec( arg, _, saved, _ )
 end
 
 local fn = {
+	_ = {},
 	ID_PATTERN = '^[%a_][%w_]*$',
 	NIL = NIL,
-	_ = {},
 	UTF8_PATTERN = "([%z\1-\127\194-\244][\128-\191]*)",
 	DEFAULT_TOSTRING = { ident = '  ', lsep = '\n', kvsep = ' = ', rec = defaultrec },
 	COMPACT_TOSTRING = { ident = '', lsep = '', kvsep = '=', rec = defaultrec },
 }
 
-local setmetatable, getmetatable, type, pairs, tostring, unpack = setmetatable, getmetatable, type, pairs, tostring, table.unpack or _G.unpack
+local setmetatable, getmetatable, type, pairs, tostring = setmetatable, getmetatable, type, pairs, tostring
+local pack, unpack = _G.table.pack or function(...) return {...} end, _G.table.unpack or _G.unpack
 
 function fn.len( a )
-	return #a 
+	return #a
 end
 
 local len = fn.len
@@ -92,7 +93,9 @@ local function dotostring( arg, options, saved, level )
 		if saved[arg] then
 			return (options.rec or fn.DEFAULT_TOSTRING.rec)( arg, options, saved, level )
 		else
-			local ident, lsep, kvsep = options.ident or fn.DEFAULT_TOSTRING.ident, options.lsep or fn.DEFAULT_TOSTRING.lsep, options.kvsep or fn.DEFAULT_TOSTRING.kvsep
+			local ident = options.ident or fn.DEFAULT_TOSTRING.ident
+			local lsep = options.lsep or fn.DEFAULT_TOSTRING.lsep
+			local kvsep = options.kvsep or fn.DEFAULT_TOSTRING.kvsep
 			saved.n = saved.n + 1
 			saved[arg] = saved.n
 			local ret, na = {}, len( arg )
@@ -146,7 +149,7 @@ function fn.foldr( self, f, acc )
 	end
 	return acc
 end
-	
+
 function fn.sum( self, acc )
 	acc = acc or 0
 	for i = 1, len( self ) do
@@ -154,7 +157,7 @@ function fn.sum( self, acc )
 	end
 	return acc
 end
-	
+
 function fn.shuffle( self, rand )
 	rand = rand or math.random
 	local result = {}
@@ -171,10 +174,10 @@ end
 function fn.sub( self, init, limit, step )
 	local n = len( self )
 	init, limit, step = init, limit or n, step or 1
-	if init < 0 then 
+	if init < 0 then
 		init = n + init + 1
 	end
-	if limit < 0 then 
+	if limit < 0 then
 		limit = n + limit + 1
 	end
 	init, limit = math.max( 1, math.min( init, n )), math.max( 1, math.min( limit, n ))
@@ -252,8 +255,8 @@ end
 
 function fn.flatten( self )
 	local result, j = {}, 0
-	for i = 1, len( self ) do 
-		j = doflatten( result, self[i], j ) 
+	for i = 1, len( self ) do
+		j = doflatten( result, self[i], j )
 	end
 	return result
 end
@@ -285,7 +288,7 @@ function fn.any( self, p )
 	end
 	return false
 end
-	
+
 function fn.filter( self, p )
 	local result, j = {}, 0
 	for i = 1, len( self ) do
@@ -307,7 +310,7 @@ end
 
 function fn.keys( self )
 	local result, i = {}, 0
-	for k, _ in pairs( self ) do
+	for k in pairs( self ) do
 		i = i + 1
 		result[i] = k
 	end
@@ -381,7 +384,7 @@ end
 
 function fn.sortedpairs( self, cmp )
 	local sortedkeys, i = {}, 0
-	for k, _ in pairs( self ) do
+	for k in pairs( self ) do
 		i = i + 1
 		sortedkeys[i] = k
 	end
@@ -425,7 +428,7 @@ function fn.update( self, utable, nilval )
 end
 
 function fn.unique( self )
-	local result, uniq, j = {}, {}, 0 
+	local result, uniq, j = {}, {}, 0
 	for i = 1, len( self ) do
 		local v = self[i]
 		if not uniq[v] then
@@ -460,7 +463,7 @@ function fn.range( init, limit, step )
 	for i = init, limit, step do
 		j = j + 1
 		array[j] = i
-	end	
+	end
 	return array
 end
 
@@ -468,7 +471,7 @@ fn.concat = table.concat
 fn.getmetatable = getmetatable
 fn.setmetatable = setmetatable
 fn.unpack = unpack
-fn.pack = table.pack or function(...) return {...} end
+fn.pack = pack
 
 fn.lambda = (function()
 	local loadstring = _G.loadstring or load
@@ -688,7 +691,7 @@ local function dodiff( t, dt, res, nilval )
 					res[k] = dodiff( v, dv, {}, nilval )
 				end
 			end
-			for k, v in pairs( t ) do
+			for k in pairs( t ) do
 				if dt[k] == nil then
 					res[k] = nilval
 				end
