@@ -1,6 +1,6 @@
 --[[
 
- fn - v1.6.2 - public domain Lua functional library
+ fn - v2.0.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -14,19 +14,23 @@
 
  LICENSE
 
- This software is dual-licensed to the public domain and under the following
- license: you are granted a perpetual, irrevocable license to copy, modify,
- publish, and distribute this file as you see fit.
+ See end of file for license information.
 
 --]]
 
 local NIL = {}
 
+local function defaultrec( arg, _, saved, _ )
+	return ('{"RECURSION_%d"}'):format( saved[arg] )
+end
+
 local fn = {
 	ID_PATTERN = '^[%a_][%w_]*$',
 	NIL = NIL,
 	_ = {},
-	UTF8_PATTERN = "([%z\1-\127\194-\244][\128-\191]*)"
+	UTF8_PATTERN = "([%z\1-\127\194-\244][\128-\191]*)",
+	DEFAULT_TOSTRING = { ident = '  ', lsep = '\n', kvsep = ' = ', rec = defaultrec },
+	COMPACT_TOSTRING = { ident = '', lsep = '', kvsep = '=', rec = defaultrec },
 }
 
 local setmetatable, getmetatable, type, pairs, tostring = setmetatable, getmetatable, type, pairs, tostring
@@ -78,13 +82,6 @@ function fn.isthread( a ) return type( a ) == 'thread' end
 function fn.isid( a ) return type( a ) == 'string' and a:match( fn.ID_PATTERN ) ~= nil end
 function fn.isempty( a ) return next( a ) == nil end
 
-local function defaultrec( arg, _, saved, _ )
-	return ('{"RECURSION_%d"}'):format( saved[arg] )
-end
-
-fn.DEFAULT_TOSTRING = { ident = '  ', lsep = '\n', kvsep = ' = ', rec = defaultrec }
-fn.COMPACT_TOSTRING = { ident = '', lsep = '', kvsep = '=', rec = defaultrec }
-
 local function dotostring( arg, options, saved, level )
 	local t = type( arg )
 	options = options or fn.DEFAULT_TOSTRING
@@ -128,12 +125,6 @@ end
 
 fn.tostring = dotostring
 
-local fnmt = { __index = fn, __tostring = dotostring }
-
-function fn.wrap( t )
-	return setmetatable( t, fnmt )
-end
-
 function fn.foldl( self, f, acc )
 	for i = 1, len( self ) do
 		local stop
@@ -166,7 +157,7 @@ end
 	
 function fn.shuffle( self, rand )
 	rand = rand or math.random
-	local result = fn.wrap{}
+	local result = {}
 	for i = 1, len( self ) do
 		result[i] = self[i]
 	end
@@ -187,7 +178,7 @@ function fn.sub( self, init, limit, step )
 		limit = n + limit + 1
 	end
 	init, limit = math.max( 1, math.min( init, n )), math.max( 1, math.min( limit, n ))
-	local result, j = fn.wrap{}, 0
+	local result, j = {}, 0
 	for i = init, limit, step do
 		j = j + 1
 		result[j] = self[i]
@@ -196,7 +187,7 @@ function fn.sub( self, init, limit, step )
 end
 
 function fn.reverse( self )
-	local result, n = fn.wrap{}, len( self ) + 1
+	local result, n = {}, len( self ) + 1
 	for i = n, 1, -1 do
 		result[n - i] = self[i]
 	end
@@ -208,7 +199,7 @@ function fn.insert( self, pos, ... )
 	if m == 0 then
 		return self
 	else
-		local result = fn.wrap{}
+		local result = {}
 		pos = pos < 0 and n + pos + 2 or pos
 		pos = pos < 0 and 1 or pos > n+1 and n+1 or pos
 		for i = 1, pos-1 do result[i] = self[i] end
@@ -219,7 +210,7 @@ function fn.insert( self, pos, ... )
 end
 
 function fn.remove( self, ... )
-	local result, j, toremove = fn.wrap{}, 0, {}
+	local result, j, toremove = {}, 0, {}
 	for i = 1, select( '#', ... ) do
 		toremove[select( i, ... )] = true
 	end
@@ -234,7 +225,7 @@ function fn.remove( self, ... )
 end
 
 function fn.partition( self, p )
-	local result1, result2, j, k = fn.wrap{}, fn.wrap{}, 0, 0
+	local result1, result2, j, k = {}, {}, 0, 0
 	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			j = j + 1
@@ -260,7 +251,7 @@ local function doflatten( t, v, index )
 end
 
 function fn.flatten( self )
-	local result, j = fn.wrap{}, 0
+	local result, j = {}, 0
 	for i = 1, len( self ) do 
 		j = doflatten( result, self[i], j ) 
 	end
@@ -296,7 +287,7 @@ function fn.any( self, p )
 end
 	
 function fn.filter( self, p )
-	local result, j = fn.wrap{}, 0
+	local result, j = {}, 0
 	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			j = j + 1
@@ -307,7 +298,7 @@ function fn.filter( self, p )
 end
 
 function fn.map( self, f )
-	local result = fn.wrap{}		
+	local result = {}
 	for i = 1, len( self ) do
 		result[i] = f( self[i], i, self )
 	end
@@ -315,7 +306,7 @@ function fn.map( self, f )
 end
 
 function fn.keys( self )
-	local result, i = fn.wrap{}, 0
+	local result, i = {}, 0
 	for k, _ in pairs( self ) do
 		i = i + 1
 		result[i] = k
@@ -324,7 +315,7 @@ function fn.keys( self )
 end
 
 function fn.values( self )
-	local result, i = fn.wrap{}, 0
+	local result, i = {}, 0
 	for _, v in pairs( self ) do
 		i = i + 1
 		result[i] = v
@@ -334,7 +325,7 @@ end
 
 function fn.copy( self )
 	if type( self ) == 'table' then
-		local result = fn.wrap{}
+		local result = {}
 		for k, v in pairs( self ) do
 			result[k] = v
 		end
@@ -385,7 +376,7 @@ function fn.ipairs( self )
 	for i = 1, len( self ) do
 		result[i] = {i,self[i]}
 	end
-	return fn.wrap( result )
+	return ( result )
 end
 
 function fn.sortedpairs( self, cmp )
@@ -395,7 +386,7 @@ function fn.sortedpairs( self, cmp )
 		sortedkeys[i] = k
 	end
 	table.sort( sortedkeys, cmp )
-	local result = fn.wrap{}
+	local result = {}
 	for j = 1, i do
 		local k = sortedkeys[j]
 		result[j] = {k,self[k]}
@@ -404,7 +395,7 @@ function fn.sortedpairs( self, cmp )
 end
 
 function fn.pairs( self )
-	local result, i = fn.wrap{}, 0
+	local result, i = {}, 0
 	for k, v in pairs( self ) do
 		i = i + 1
 		result[i] = {k,v}
@@ -413,17 +404,18 @@ function fn.pairs( self )
 end
 
 function fn.frompairs( self )
-	local result = fn.wrap{}
+	local result = {}
 	for i = 1, len( self ) do
 		result[self[i][1]] = self[i][2]
 	end
 	return result
 end
 
-function fn.update( self, utable )
+function fn.update( self, utable, nilval )
 	local result = fn.copy( self )
+	nilval = nilval or NIL
 	for k, v in pairs( utable ) do
-		if v == NIL then
+		if v == nilval then
 			result[k] = nil
 		else
 			result[k] = v
@@ -433,7 +425,7 @@ function fn.update( self, utable )
 end
 
 function fn.unique( self )
-	local result, uniq, j = fn.wrap{}, {}, 0 
+	local result, uniq, j = {}, {}, 0 
 	for i = 1, len( self ) do
 		local v = self[i]
 		if not uniq[v] then
@@ -454,7 +446,7 @@ function fn.nkeys( self )
 end
 
 function fn.range( init, limit, step )
-	local array = fn.wrap{}
+	local array = {}
 	if not limit then
 		if init == 0 then
 			return array
@@ -477,10 +469,6 @@ fn.getmetatable = getmetatable
 fn.setmetatable = setmetatable
 fn.unpack = table.unpack or unpack
 fn.pack = table.pack or function(...) return {...} end
-
-function fn.plain( self )
-	return setmetatable( self, nil )
-end
 
 fn.lambda = (function()
 	local loadstring = loadstring or load
@@ -552,7 +540,7 @@ end
 fn.equal = equal
 
 function fn.chars( str, pattern )
-	local result, i = fn.wrap{}, 0
+	local result, i = {}, 0
 	for char in str:gmatch( pattern or "." ) do
 		i = i + 1
 		result[i] = char
@@ -565,7 +553,7 @@ function fn.utf8( str )
 end
 
 function fn.rep( self, n, sep )
-	local result, m, k = fn.wrap{}, len( self ), 0
+	local result, m, k = {}, len( self ), 0
 	for i = 1, n do
 		for j = 1, m do
 			k = k + 1
@@ -584,7 +572,7 @@ function fn.zip( self, ... )
 	if n == 1 then
 		return self
 	else
-		local result, lists = fn.wrap{}, {self,...}
+		local result, lists = {}, {self,...}
 		for i = 1, len( lists[1] ) do
 			local zipped = {}
 			for j = 1, n do
@@ -597,7 +585,7 @@ function fn.zip( self, ... )
 end
 
 function fn.unzip( self )
-	local n, m, result = len( self ), len( self[1] ), fn.wrap{}
+	local n, m, result = len( self ), len( self[1] ), {}
 	for i = 1, m do
 		local unzipped = {}
 		for j = 1, n do
@@ -609,7 +597,7 @@ function fn.unzip( self )
 end
 
 function fn.frequencies( self )
-	local result = fn.wrap{}
+	local result = {}
 	for i = 1, len( self ) do
 		result[self[i]] = (result[self[i]] or 0) + 1
 	end
@@ -621,7 +609,7 @@ function fn.chunk( self, ... )
 	if n == 0 then
 		return self
 	else
-		local result, t = fn.wrap{}, {}
+		local result, t = {}, {}
 		local j, k, kmodn, m = 1, 1, 1, select( 1, ... )
 		for i = 1, len( self ) do
 			t[j] = self[i]
@@ -641,7 +629,7 @@ function fn.chunk( self, ... )
 end
 
 function fn.intersection( self, ... )
-	local result, n = fn.wrap{}, select( '#', ... )
+	local result, n = {}, select( '#', ... )
 	if n > 0 then
 		for k, v in pairs( self ) do
 			local intersection = true
@@ -660,7 +648,7 @@ function fn.intersection( self, ... )
 end
 
 function fn.difference( self, ... )
-	local result, n = fn.wrap{}, select( '#', ... )
+	local result, n = {}, select( '#', ... )
 	for k, v in pairs( self ) do
 		local unique = true
 		for i = 1, n do
@@ -688,7 +676,7 @@ function fn.union( self, ... )
 	return result
 end
 
-local function dodiff( t, dt, res )
+local function dodiff( t, dt, res, nilval )
 	if t ~= dt then
 		local ttype = type( t )
 		if type( dt ) == 'table' and ttype == 'table' then
@@ -697,12 +685,12 @@ local function dodiff( t, dt, res )
 				if v == nil then
 					res[k] = dv
 				elseif v ~= dv then
-					res[k] = dodiff( v, dv, {} )
+					res[k] = dodiff( v, dv, {}, nilval )
 				end
 			end
 			for k, v in pairs( t ) do
 				if dt[k] == nil then
-					res[k] = NIL
+					res[k] = nilval
 				end
 			end
 			if next( res ) then
@@ -714,15 +702,15 @@ local function dodiff( t, dt, res )
 	end
 end
 
-function fn.diff( self, other )
+function fn.diff( self, other, nilval )
 	if type( self ) == 'table' and type( other ) == 'table' then
-		return fn.wrap( dodiff( self, other, {} ) or {} )
+		return dodiff( self, other, {}, nilval or NIL ) or {}
 	else
 		return other
 	end
 end
 
-local function dopatch( t, dt )
+local function dopatch( t, dt, nilval )
 	if t ~= dt then
 		local ttype = type( t )
 		if type( dt ) == 'table' and ttype == 'table' then
@@ -732,12 +720,12 @@ local function dopatch( t, dt )
 			end
 			for k, dv in pairs( dt ) do
 				local v = t[k]
-				if dv == NIL then
+				if dv == nilval then
 					res[k] = nil
 				elseif v == nil then
 					res[k] = dv
 				elseif v ~= dv then
-					res[k] = dopatch( v, dv )
+					res[k] = dopatch( v, dv, nilval )
 				end
 			end
 			return res
@@ -748,20 +736,78 @@ local function dopatch( t, dt )
 	return t
 end
 
-function fn.patch( self, other )
+function fn.patch( self, other, nilval )
 	if type( self ) == 'table' and type( other ) == 'table' then
-		return fn.wrap( dopatch( self, other ))
+		return ( dopatch( self, other, nilval or NIL ))
 	else
 		return self
 	end
 end
 
+local chainfn = { value = function( self ) return self[1] end }
+
+for k, f in pairs( fn ) do
+	chainfn[k] = function( self, ... )
+		self[1], self[2] = f( self[1], ... )
+		return self
+	end
+end
+
+local chainmt = {__index = chainfn}
+
+function fn.chain( self )
+	return setmetatable( {self}, chainmt )
+end
+
 return setmetatable( fn, {__call = function( _, t, ... )
-	if type( t ) == 'table' then
-		return fn.copy( t )
-	elseif type( t ) == 'string' then
+	local ttype = type( t )
+	if ttype == 'table' then
+		return fn.chain( t, ... )
+	elseif ttype == 'string' then
 		return fn.lambda( t, ... )
 	else
 		error( 'fn accepts tables or strings as arguments' )
 	end
 end} )
+
+--[[
+------------------------------------------------------------------------------
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2018 Ilya Kolbin
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+------------------------------------------------------------------------------
+--]]
