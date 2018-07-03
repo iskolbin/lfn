@@ -18,6 +18,9 @@ Lua functional library
 Array transforms
 ----------------
 
+Note that when you could pass a function (like `f` in `map` or `p` in `filter`) you also could pass a string
+instead which will be converted by the `lambda` function (see below).
+
 * `map( array, f )` transforms passed array by mapping with signature `f(value,index,array) => newvalue`
 * `filter( array, p )` filters elements from array which hold predicate `p(value,index,array) => boolean`
 * `shuffle( array )` shuffles array using `math.random` generator

@@ -1,6 +1,6 @@
 --[[
 
- fn - v2.1.0 - public domain Lua functional library
+ fn - v2.2.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -34,6 +34,7 @@ local fn = {
 }
 
 local setmetatable, getmetatable, type, pairs, tostring = setmetatable, getmetatable, type, pairs, tostring
+local tonumber, select, concat = tonumber, select, table.concat
 local pack, unpack = _G.table.pack or function(...) return {...} end, _G.table.unpack or _G.unpack
 
 function fn.len( a )
@@ -41,6 +42,53 @@ function fn.len( a )
 end
 
 local len = fn.len
+
+fn.lambda = (function()
+	local loadstring = _G.loadstring or load
+	local cache = setmetatable( {}, {__mode = 'kv'} )
+	return function( code, ... )
+		local curried = select( '#', ... )
+		local fs = cache[curried]
+		local fc = fs and fs[code]
+		if not fc then
+			local maxarg, args, noindexarg = 0, {}
+			local body = code:gsub( '%@(%d+)', function( x )
+				if tonumber( x ) > maxarg then
+					maxarg = tonumber( x )
+				end
+				return '__' .. x .. '__'
+			end )
+			body, noindexarg = body:gsub( '%@', '__1__' )
+			for i = 1, math.max( maxarg, curried, noindexarg == 0 and 0 or 1 ) do
+				args[#args+1] = '__' .. i .. '__'
+			end
+
+			local curriedargs = curried > 0 and
+				('local %s = ...\n'):format(concat( args, ',', 1, curried ))
+				or ''
+
+			local gencode = ('%sreturn function(%s) return %s end'):format(
+				curriedargs,
+				concat( args, ',', curried+1 ),
+				body )
+
+			fc = assert( loadstring( gencode ))
+			if curried == 0 then
+				fc = fc()
+			end
+			if not fs then
+				cache[curried] = { [code] = fc }
+			else
+				cache[curried][code] = fc
+			end
+		end
+		if curried == 0 then
+			return fc
+		else
+			return fc( ... )
+		end
+	end
+end)()
 
 function fn.identity( ... ) return ... end
 function fn.truth() return true end
@@ -113,7 +161,7 @@ local function dotostring( arg, options, saved, level )
 					tret[nt] = ident:rep(level+1) .. key .. kvsep .. dotostring( v, options, saved, level+1 )
 				end
 			end
-			local retc, tretc = table.concat( ret, ',' ), table.concat( tret, ',' .. lsep )
+			local retc, tretc = concat( ret, ',' ), concat( tret, ',' .. lsep )
 			if tretc ~= '' then
 				tretc = lsep .. tretc .. lsep .. ident:rep(level) .. '}'
 			else
@@ -128,7 +176,16 @@ end
 
 fn.tostring = dotostring
 
+local function tofunction( f )
+	if type( f ) == 'string' then
+		return fn.lambda( f )
+	else
+		return f
+	end
+end
+
 function fn.foldl( self, f, acc )
+	f = tofunction( f )
 	for i = 1, len( self ) do
 		local stop
 		acc, stop = f( acc, self[i], i, self )
@@ -140,6 +197,7 @@ function fn.foldl( self, f, acc )
 end
 
 function fn.foldr( self, f, acc )
+	f = tofunction( f )
 	for i = len( self ), 1, -1 do
 		local stop
 		acc, stop = f( acc, self[i], i, self )
@@ -228,6 +286,7 @@ function fn.remove( self, ... )
 end
 
 function fn.partition( self, p )
+	p = tofunction( p )
 	local result1, result2, j, k = {}, {}, 0, 0
 	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
@@ -262,6 +321,7 @@ function fn.flatten( self )
 end
 
 function fn.count( self, p )
+	p = tofunction( p )
 	local n = 0
 	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
@@ -272,6 +332,7 @@ function fn.count( self, p )
 end
 
 function fn.all( self, p )
+	p = tofunction( p )
 	for i = 1, len( self ) do
 		if not p( self[i], i, self ) then
 			return false
@@ -281,6 +342,7 @@ function fn.all( self, p )
 end
 
 function fn.any( self, p )
+	p = tofunction( p )
 	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			return true
@@ -290,6 +352,7 @@ function fn.any( self, p )
 end
 
 function fn.filter( self, p )
+	p = tofunction( p )
 	local result, j = {}, 0
 	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
@@ -301,6 +364,7 @@ function fn.filter( self, p )
 end
 
 function fn.map( self, f )
+	f = tofunction( f )
 	local result = {}
 	for i = 1, len( self ) do
 		result[i] = f( self[i], i, self )
@@ -339,6 +403,7 @@ function fn.copy( self )
 end
 
 function fn.sort( self, cmp )
+	cmp = tofunction( cmp )
 	local result = fn.copy( self )
 	table.sort( result, cmp )
 	return result
@@ -352,6 +417,7 @@ function fn.indexof( self, v, cmp )
 			end
 		end
 	else
+		cmp = tofunction( cmp )
 		assert( type( cmp ) == 'function', '3rd argument should be nil for linear search and comparator for binary search' )
 		local init, limit = 1, len( self )
 		local floor = math.floor
@@ -367,6 +433,7 @@ function fn.indexof( self, v, cmp )
 end
 
 function fn.find( self, p )
+	p = tofunction( p )
 	for i = 1, len( self ) do
 		if p( self[i], i, self ) then
 			return self[i], i
@@ -383,6 +450,7 @@ function fn.ipairs( self )
 end
 
 function fn.sortedpairs( self, cmp )
+	cmp = tofunction( cmp )
 	local sortedkeys, i = {}, 0
 	for k in pairs( self ) do
 		i = i + 1
@@ -483,58 +551,12 @@ function fn.range( init, limit, step )
 	return array
 end
 
-fn.concat = table.concat
+fn.concat = concat
 fn.getmetatable = getmetatable
 fn.setmetatable = setmetatable
 fn.unpack = unpack
 fn.pack = pack
 
-fn.lambda = (function()
-	local loadstring = _G.loadstring or load
-	local cache = setmetatable( {}, {__mode = 'kv'} )
-	return function( code, ... )
-		local curried = select( '#', ... )
-		local fs = cache[curried]
-		local fc = fs and fs[code]
-		if not fc then
-			local maxarg, args, noindexarg = 0, {}
-			local body = code:gsub( '%@(%d+)', function( x )
-				if tonumber( x ) > maxarg then
-					maxarg = tonumber( x )
-				end
-				return '__' .. x .. '__'
-			end )
-			body, noindexarg = body:gsub( '%@', '__1__' )
-			for i = 1, math.max( maxarg, curried, noindexarg == 0 and 0 or 1 ) do
-				args[#args+1] = '__' .. i .. '__'
-			end
-
-			local curriedargs = curried > 0 and
-				('local %s = ...\n'):format(table.concat( args, ',', 1, curried ))
-				or ''
-
-			local gencode = ('%sreturn function(%s) return %s end'):format(
-				curriedargs,
-				table.concat( args, ',', curried+1 ),
-				body )
-
-			fc = assert( loadstring( gencode ))
-			if curried == 0 then
-				fc = fc()
-			end
-			if not fs then
-				cache[curried] = { [code] = fc }
-			else
-				cache[curried][code] = fc
-			end
-		end
-		if curried == 0 then
-			return fc
-		else
-			return fc( ... )
-		end
-	end
-end)()
 
 local function equal( a, b )
 	if a == b or a == fn._ or b == fn._ then
