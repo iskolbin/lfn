@@ -85,7 +85,7 @@ assertq( fn.isempty{x=2}, false )
 
 assertq( fn'55'(), 55 )
 assertq( fn.foldl( {1,2,3,4}, fn[[@1 * @2]], 1 ), 24 )
-assertq( fn.foldr( {"d","l","r","o","W"}, fn'@2..@1', '' ), 'World' )
+assertq( fn.foldr( {"d","l","r","o","W"}, fn'@1..@2', '' ), 'World' )
 assertq( fn.sum{1,2,3,4}, 10 )
 assertq( fn.sub({1,2,3,4,5,6,7,8,9,10}, 1, 5 ), {1,2,3,4,5} )
 assertq( fn.sub({1,2,3,4,5,6,7,8,9,10}, 6, -2 ), {6,7,8,9} )
@@ -175,9 +175,9 @@ assertq( fn.equal( {x = 2, y = 3, z = {x = 2}}, {x = 2, y = 3, z = {x = {}}} ), 
 assertq( fn.equal( {x = 2, y = 3, z = {x = 2}}, {x = 2, y = 4, z = {x = 2}} ), false )
 assertq( fn.equal( {x = 2, y = 3, z = {x = 2}}, {x = 2, y = 3, z = {x = 2, u = 22}} ), false )
 assertq( fn.equal( {[true] = 1}, {[true] = 1} ), true )
-assertq( fn{1,2,3,4}:foldl( fn[[@1+@2,@3 == 3]], 0 ):value(), 6 )
-assertq( fn{1,2,3,4}:foldl( fn[[@+@2,@3 == 3]], 0 ):value(), 6 )
-assertq( fn{1,2,3,4}:foldr( fn[[@1+@2,@3 == 3]], 0 ):value(), 7 )
+assertq( fn{1,2,3,4}:foldl( fn[[@1+@2,@3 == 3]], 0 ), 6 )
+assertq( fn{1,2,3,4}:foldl( fn[[@+@2,@3 == 3]], 0 ), 6 )
+assertq( fn{1,2,3,4}:foldr( fn[[@1+@2,@3 == 3]], 0 ), 7 )
 local x = {}
 x[x] = x
 assertq( x, x )

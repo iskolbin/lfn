@@ -7,15 +7,13 @@ Lua functional library
 ======================
 
 * `fn.copy( table )` makes a shallow copy of the `table` and set helper metatable to allow chain calls using `:` syntax
-* `fn.wrap( table )` set helper metatable directly, which overwrites current metatable of passed `table`
-* `fn.plain( table )` set metatable of `table` to `nil`
 * `fn.range( limit )` creates range from 1 to `limit > 0` or from -1 to `limit < 0`, with helper metatable set, for `limit == 0` returns empty array
 * `fn.range( init, limit )` creates range from `init` to `limit` with helper metatable set, it's ok if `limit < init`
 * `fn.range( init, limit, step )` creates range from `init` to `limit` by `step` with helper metatable set
 * `fn.utf8( string )` creates array with UTF-8 chars extracted from `string`
 * `fn.chars( string )` creates array with 8-bit chars extracted from `string`
 * `fn.chars( string, pattern )` creates array with substrings from `string` extracted using `pattern`
-
+* `fn.chain( table )` wraps table with metatable for chaining calls; call `:value()` to unwrap the result, simple values are automatically unwrapped also `foldl`, `foldr`, `unpack` are unwrapped
 
 Array transforms
 ----------------
@@ -65,7 +63,7 @@ Set operations
 Folds
 -----
 
-* `foldl( array, f, acc )` common reduce from the begining of `array`, reduces by the function `f(v,acc,i,arr) => acc,stop` where if `stop` is notfalsy the reducing process halts
+* `foldl( array, f, acc )` common reduce from the begining of `array`, reduces by the function `f( acc, value, index, array ) => acc, stop` where if `stop` is notfalsy the reducing process halts
 * `foldr( array, f, acc )` reduce from the end of `array`
 * `sum( array )` returns sum of `array` elements
 * `all( array, p )` returns `true` if all `array` elements hold `p( value, index, array) => bool`

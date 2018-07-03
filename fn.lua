@@ -1,6 +1,6 @@
 --[[
 
- fn - v2.0.0 - public domain Lua functional library
+ fn - v2.0.1 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -33,7 +33,7 @@ local fn = {
 	COMPACT_TOSTRING = { ident = '', lsep = '', kvsep = '=', rec = defaultrec },
 }
 
-local setmetatable, getmetatable, type, pairs, tostring = setmetatable, getmetatable, type, pairs, tostring
+local setmetatable, getmetatable, type, pairs, tostring, unpack = setmetatable, getmetatable, type, pairs, tostring, table.unpack or _G.unpack
 
 function fn.len( a )
 	return #a 
@@ -128,7 +128,7 @@ fn.tostring = dotostring
 function fn.foldl( self, f, acc )
 	for i = 1, len( self ) do
 		local stop
-		acc, stop = f( self[i], acc, i, self )
+		acc, stop = f( acc, self[i], i, self )
 		if stop then
 			return acc
 		end
@@ -139,7 +139,7 @@ end
 function fn.foldr( self, f, acc )
 	for i = len( self ), 1, -1 do
 		local stop
-		acc, stop = f( self[i], acc, i, self )
+		acc, stop = f( acc, self[i], i, self )
 		if stop then
 			return acc
 		end
@@ -467,7 +467,7 @@ end
 fn.concat = table.concat
 fn.getmetatable = getmetatable
 fn.setmetatable = setmetatable
-fn.unpack = table.unpack or unpack
+fn.unpack = unpack
 fn.pack = table.pack or function(...) return {...} end
 
 fn.lambda = (function()
@@ -744,12 +744,26 @@ function fn.patch( self, other, nilval )
 	end
 end
 
-local chainfn = { value = function( self ) return self[1] end }
+local chainfn = { value = function( self ) return unpack( self ) end }
 
 for k, f in pairs( fn ) do
-	chainfn[k] = function( self, ... )
-		self[1], self[2] = f( self[1], ... )
-		return self
+	if k == 'unpack' then
+		chainfn[k] = function( self, ... )
+			return unpack( self[1], ... )
+		end
+	elseif k == 'foldl' or k == 'foldr' then
+		chainfn[k] = function( self, ... )
+			return f( self[1], ... )
+		end
+	else
+		chainfn[k] = function( self, ... )
+			self[1], self[2] = f( self[1], ... )
+			if type( self[1] ) ~= 'table' then
+				return self[1], self[2]
+			else
+				return self
+			end
+		end
 	end
 end
 
