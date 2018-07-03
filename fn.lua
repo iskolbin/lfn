@@ -1,6 +1,6 @@
 --[[
 
- fn - v2.0.1 - public domain Lua functional library
+ fn - v2.1.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -10,7 +10,7 @@
 
  COMPATIBILITY
 
- Lua 5.1, 5.2, 5.3, LuaJIT 1, 2
+ Lua 5.1, 5.2, 5.3, LuaJIT
 
  LICENSE
 
@@ -448,6 +448,22 @@ function fn.nkeys( self )
 	return n
 end
 
+function fn.min( self )
+	local min = self[1]
+	for i = 2, len( self ) do
+		if min > self[i] then min = self[i] end
+	end
+	return min
+end
+
+function fn.max( self )
+	local max = self[1]
+	for i = 2, len( self ) do
+		if max < self[i] then max = self[i] end
+	end
+	return max
+end
+
 function fn.range( init, limit, step )
 	local array = {}
 	if not limit then
@@ -754,7 +770,7 @@ for k, f in pairs( fn ) do
 		chainfn[k] = function( self, ... )
 			return unpack( self[1], ... )
 		end
-	elseif k == 'foldl' or k == 'foldr' then
+	elseif k == 'foldl' or k == 'foldr' or k == 'max' or k == 'min' then
 		chainfn[k] = function( self, ... )
 			return f( self[1], ... )
 		end
