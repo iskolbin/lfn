@@ -1,6 +1,6 @@
 --[[
 
- fn - v2.2.0 - public domain Lua functional library
+ fn - v2.3.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -372,6 +372,14 @@ function fn.map( self, f )
 	return result
 end
 
+function fn.each( self, f )
+	f = tofunction( f )
+	for i = 1, len( self ) do
+		f( self[i], i, self )
+	end
+	return self
+end
+
 function fn.keys( self )
 	local result, i = {}, 0
 	for k in pairs( self ) do
@@ -396,7 +404,7 @@ function fn.copy( self )
 		for k, v in pairs( self ) do
 			result[k] = v
 		end
-		return result
+		return setmetatable( result, getmetatable( self ))
 	else
 		return self
 	end
@@ -792,7 +800,7 @@ for k, f in pairs( fn ) do
 		chainfn[k] = function( self, ... )
 			return unpack( self[1], ... )
 		end
-	elseif k == 'foldl' or k == 'foldr' or k == 'max' or k == 'min' then
+	elseif k == 'foldl' or k == 'foldr' or k == 'max' or k == 'min' or k == 'copy' then
 		chainfn[k] = function( self, ... )
 			return f( self[1], ... )
 		end
@@ -820,8 +828,10 @@ return setmetatable( fn, {__call = function( _, t, ... )
 		return fn.chain( t, ... )
 	elseif ttype == 'string' then
 		return fn.lambda( t, ... )
+	elseif ttype == 'number' then
+		return fn.chain( fn.range( t, ... ))
 	else
-		error( 'fn accepts tables or strings as arguments' )
+		error( 'fn accepts table, string or 1,2 or 3 numbers as the arguments' )
 	end
 end} )
 
