@@ -8,6 +8,7 @@ Lua functional library
 
 * `fn.copy(value)` makes a shallow copy of the `table` or just returns any other value
 * `fn.copyarray(array)` makes a shallow copy of the `array`
+* `fn.deepcopy(value)` makes a deep copy of the `table` or just returns any other value
 * `fn.range(limit)` creates range from 1 to `limit > 0` or from -1 to `limit < 0`, for `limit == 0` returns empty array
 * `fn.range(init, limit)` creates range from `init` to `limit`, it's ok if `limit < init`
 * `fn.range(init, limit, step)` creates range from `init` to `limit` by `step`
