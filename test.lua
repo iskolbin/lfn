@@ -132,6 +132,12 @@ assertq(fn.keys{1, 2, 4, 7}, {1, 2, 3, 4})
 assertq(fn.sorted(fn.values{x = 2, y = 3}), {2, 3})
 assertq(fn.values{1, 2, 3, 5}, {1, 2, 3, 5})
 assertq(fn.copy{1, 2, 3, x=5, z={1, 2}}, {1, 2, 3, x=5, z={1, 2}})
+local t = {}
+t[1] = t
+local t_c = fn.deepcopy(t)
+assert(t_c ~= t)
+assert(t_c[1] == t_c)
+assertq(fn.copy{1, 2, 3, x=5, z={1, 2}}, {1, 2, 3, x=5, z={1, 2}})
 assertq(fn.indexof({1, 2, "x", 4, 5, 6}, "x"), 3)
 assertq(fn.indexof({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 7, fn.lt), 7)
 assertq(fn.indexof({10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, 7, fn.gt), 4)

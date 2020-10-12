@@ -1,6 +1,6 @@
 --[[
 
- fn - v3.0.0 - public domain Lua functional library
+ fn - v3.0.1 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -20,7 +20,7 @@
 
 
 local functions = {
-	"chars", "chunk", "copy", "copyarray", "count", "diff", "difference", "each",
+	"chars", "chunk", "copy", "copyarray", "count", "deepcopy", "diff", "difference", "each",
 	"entries", "equal", "every", "exclude", "filter", "find", "flat", "fold", "foldl",
 	"foldr", "frequencies","fromentries", "include", "indexed", "indexof", "intersection",
 	"keys", "lambda", "map", "max", "min", "op", "pack", "partition", "patch", "pred",
