@@ -22,7 +22,7 @@
 local functions = {
 	"chars", "chunk", "copy", "copyarray", "count", "deepcopy", "diff", "difference", "each",
 	"entries", "equal", "every", "exclude", "filter", "find", "flat", "fold", "foldl",
-	"foldr", "frequencies","fromentries", "insertall", "indexed", "indexof", "intersection",
+	"foldr", "frequencies","fromentries", "include", "indexed", "indexof", "intersection",
 	"keys", "lambda", "map", "max", "min", "op", "pack", "partition", "patch", "pred",
 	"product", "range", "rep", "reverse",  "shuffle", "some", "sortedentries", "stablesort",
 	"str", "sub", "sum", "union", "unique", "unzip", "update", "utf8chars", "values", "zip",

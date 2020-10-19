@@ -32,7 +32,7 @@ Array transforms
 * `sub(array, init, limit, step)` create a slice of array from `init` to `limit` with `step`
 * `reverse(array)` return reversed array
 * `inplace_reverse(array)` reverses array inplace
-* `insertall(array, index, ...values)` inserts `values` from before the specified `index`. If `index < 0` then place is counted from the end of `array`, i.e. `-1` is after the last item, `-2` is before the last item
+* `include(array, index, ...values)` inserts `values` from before the specified `index`. If `index < 0` then place is counted from the end of `array`, i.e. `-1` is after the last item, `-2` is before the last item
 * `exclude(array, ...values)` removes `values` from the `array`
 * `partition(array, p)` splits array into 2 parts by predicate `p(value,index,array) => boolean` and returns array with 2 inner array
 * `flat(array)` flattens the array
