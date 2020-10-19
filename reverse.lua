@@ -1,13 +1,10 @@
-local floor = math.floor
+local libpath = select(1, ...):match(".+%.") or ""
+
+local inplace_reverse = require(libpath .. "inplace_reverse")
+local copyarray = require(libpath .. "copyarray")
 
 local function reverse(arr)
-	local n = #arr
-	for i = 1, floor(n/2) do
-		local t = arr[i]
-		arr[i] = arr[n-i+1]
-		arr[n-i+1] = t
-	end
-	return arr
+	return inplace_reverse(copyarray(arr))
 end
 
 return reverse

@@ -1,10 +1,10 @@
+local libpath = select(1, ...):match(".+%.") or ""
+
+local inplace_shuffle = require(libpath .. "inplace_shuffle")
+local copyarray = require(libpath .. "copyarray")
+
 local function shuffle(arr, rand)
-	rand = rand or math.random
-	for i = #arr, 1, -1 do
-		local j = rand(1, i)
-		arr[j], arr[i] = arr[i], arr[j]
-	end
-	return arr
+	return inplace_shuffle(copyarray(arr), rand)
 end
 
 return shuffle

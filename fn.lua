@@ -1,6 +1,6 @@
 --[[
 
- fn - v3.0.1 - public domain Lua functional library
+ fn - v3.0.3 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -22,11 +22,11 @@
 local functions = {
 	"chars", "chunk", "copy", "copyarray", "count", "deepcopy", "diff", "difference", "each",
 	"entries", "equal", "every", "exclude", "filter", "find", "flat", "fold", "foldl",
-	"foldr", "frequencies","fromentries", "include", "indexed", "indexof", "intersection",
+	"foldr", "frequencies","fromentries", "insertall", "indexed", "indexof", "intersection",
 	"keys", "lambda", "map", "max", "min", "op", "pack", "partition", "patch", "pred",
-	"product", "range", "rep", "reverse", "reversed", "shuffle", "shuffled", "some", "sorted",
-	"sortedentries", "stablesort", "str", "sub", "sum", "union", "unique", "unzip", "update",
-	"utf8chars", "values", "zip",
+	"product", "range", "rep", "reverse",  "shuffle", "some", "sortedentries", "stablesort",
+	"str", "sub", "sum", "union", "unique", "unzip", "update", "utf8chars", "values", "zip",
+	"inplace_reverse", "inplace_shuffle",
 }
 
 local isreducer = {
@@ -38,10 +38,18 @@ local unpack = _G.unpack or table.unpack
 
 local libpath = select(1, ...):match(".+%.") or ""
 
+local copy = require(libpath .. "copy")
+
 local fn = {
 	unpack = unpack,
 	concat = table.concat,
-	sort = table.sort,
+	sort = function(t, ...) t = copy(t); table.sort(t, ...); return t end,
+	inplace_sort = function(t, ...) table.sort(t, ...); return t end,
+	inplace_insert = function(t, ...) table.insert(t, ...); return t end,
+	inplace_remove = function(t, ...) table.remove(t, ...); return t end,
+	inplace_setmetatable = setmetatable,
+	setmetatable = function(t, ...) return setmetatable(copy(t), ...) end,
+	getmetatable = getmetatable,
 }
 
 for _, name in ipairs(functions) do

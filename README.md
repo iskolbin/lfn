@@ -17,30 +17,31 @@ Lua functional library
 * `fn.chars(string, pattern)` creates array with substrings from `string` extracted using `pattern`
 * `fn.chain(table)` wraps table with metatable for chaining calls; call `:value()` to unwrap the result, reducers `count`, `equal`, `every`, `max`, `min`, `fold`, `foldl`, `foldr`, `product`, `some`, `str`, `sum`, `unpack` calls are always unwrapped
 
+
 Array transforms
 ----------------
 
 * `map(array, f)` transforms passed array by mapping with signature `f(value,index,array) => newvalue`
 * `filter(array, p)` filters elements from array which hold predicate `p(value,index,array) => boolean`
-* `shuffle(array)` shuffles array inplace using `math.random` generator
-* `shuffle(array, random)` shuffles array inplace using custom RNG
-* `shuffled(array)` shuffles array using `math.random` generator
-* `shuffled(array, random)` shuffles array using custom RNG
+* `inplace_shuffle(array)` shuffles array inplace using `math.random` generator
+* `inplace_shuffle(array, random)` shuffles array inplace using custom RNG
+* `shuffle(array)` shuffles array using `math.random` generator
+* `shuffle(array, random)` shuffles array using custom RNG
 * `sub(array, init)` create a slice of array starting from `init` to the end of `array`, negative indices are allowed
 * `sub(array, init, limit)` create a slice of array from `init` to `limit`
 * `sub(array, init, limit, step)` create a slice of array from `init` to `limit` with `step`
-* `reverse(array)` reverses array inplace
-* `reversed(array)` reverses array inplace
-* `include(array, index, ...values)` inserts `values` from before the specified `index`. If `index < 0` then place is counted from the end of `array`, i.e. `-1` is after the last item, `-2` is before the last item
+* `reverse(array)` return reversed array
+* `inplace_reverse(array)` reverses array inplace
+* `insertall(array, index, ...values)` inserts `values` from before the specified `index`. If `index < 0` then place is counted from the end of `array`, i.e. `-1` is after the last item, `-2` is before the last item
 * `exclude(array, ...values)` removes `values` from the `array`
 * `partition(array, p)` splits array into 2 parts by predicate `p(value,index,array) => boolean` and returns array with 2 inner array
 * `flat(array)` flattens the array
 * `flat(array, level)` flattens the array until `level`
-* `sort(array)` sorts inplace using `table.sort`
-* `sort(array, cmp)` sorts inplace using `table.sort` using custom ordering
-* `sorted(array)` sorts the `array` copy by `<` ordering and returns the result using `table.sort`
-* `sorted(array, cmp)` sorts the `array` copy using custom ordering using `table.sort`
-* `sorted(array, cmp, sort)` sorts the `array` copy using custom ordering and custom sort function
+* `inplace_sort(array)` sorts inplace using `table.sort`
+* `inplace_sort(array, cmp)` sorts inplace using `table.sort` using custom ordering
+* `sort(array)` sorts the `array` copy by `<` ordering and returns the result using `table.sort`
+* `sort(array, cmp)` sorts the `array` copy using custom ordering using `table.sort`
+* `sort(array, cmp, sort)` sorts the `array` copy using custom ordering and custom sort function
 * `stablesort(array)` sort the `array` inplace by `<` ordering using stable sorting
 * `stablesort(array, cmp)` sorts the `array` inplace using custom ordering using stable sorting
 * `unique(array)` returns array without duplicate values
@@ -53,6 +54,7 @@ Array transforms
 * `min(array)` returns minimal element of the `array`
 * `max(array)` returns maxmial element of the `array`
 * `each(array, f)` calls `f` on each `array` element; returns passed `array`
+
 
 Table transforms
 ----------------
@@ -75,6 +77,7 @@ Set operations
 * `intersection(table, ...tables)` returns `table` with keys which exist in all `tables`
 * `union(table, ...tables)` returns `table` merged with `tables`(values of `table` will not be overwritten)
 
+
 Folds
 -----
 
@@ -82,8 +85,9 @@ Folds
 * `foldl(array, f, acc)` common reduce from the begining of `array`, reduces by the function `f(acc, value, index, array) => acc, stop` where if `stop` is notfalsy the reducing process halts
 * `foldr(array, f, acc)` reduce from the end of `array`
 * `sum(array)` returns sum of `array` elements
+* `product(array)` returns product of `array` elements
 * `every(array, p)` returns `true` if all `array` elements hold `p(value, index, array) => bool`
-* `sine(array, p)` returns `true` if any of the `array` element holds `p(value, index, array) => bool`
+* `some(array, p)` returns `true` if any of the `array` element holds `p(value, index, array) => bool`
 * `count(array, p)` counts number of `array` items for which predicate `p(value, index, array) => bool` holds
 * `indexof(array, value)` linear search of the `value` in the `array`
 * `indexof(array, value, cmp)` binary search of the `value` in the sorted `array` with `cmp` ordering
@@ -94,8 +98,11 @@ Folds
 * `str(v)` returns jsony like representation of passed value
 * `concat` == `table.concat`
 * `unpack` == `table.unpack`
-* `setmetatable(mt)` == `setmetatable`
+* `setmetatable(tbl, mt)` sets metatable for copy of `tbl`
+* `inplace_setmetatable(tbl, mt)` sets metatable for `tbl`
+* `getmetatable(tbl)` == `getmetatable`
 * `pack` == `table.pack or {...}`
+
 
 String lambda
 -------------
