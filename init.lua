@@ -1,1 +1,1 @@
-return require( ... .. '.fn' )
+return require(... .. ".fn")
