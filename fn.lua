@@ -1,6 +1,6 @@
 --[[
 
- fn - v3.0.4 - public domain Lua functional library
+ fn - v3.1.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -41,11 +41,13 @@ local functions = {
 	"foldr",
 	"frequencies",
 	"fromentries",
-	"include",
+	"insert",
 	"indexed",
 	"indexof",
+	"inplace_map",
 	"inplace_reverse",
 	"inplace_shuffle",
+	"inplace_update",
 	"intersection",
 	"issubset",
 	"keys",

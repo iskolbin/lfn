@@ -1,12 +1,12 @@
 local select = _G.select
 
-local function insertall(arr, pos, ...)
+local function insert(arr, pos, ...)
 	local n, m = #arr, select("#", ...)
 	if pos == nil then
 		return arr
 	end
 	if m == 0 then
-		return insertall(arr, -1, pos)
+		return insert(arr, -1, pos)
 	else
 		local result = {}
 		pos = pos < 0 and n + pos + 2 or pos
@@ -18,4 +18,4 @@ local function insertall(arr, pos, ...)
 	end
 end
 
-return insertall
+return insert

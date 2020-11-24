@@ -1,20 +1,9 @@
-local pairs = _G.pairs
-
 local libpath = select(1, ...):match(".+%.") or ""
 
-local NIL, copy = require(libpath .. "nil"), require(libpath .. "copy")
+local copy, inplace_update = require(libpath .. "copy"), require(libpath .. "inplace_update")
 
 local function update(tbl, upd, nilval)
-	local result = copy(tbl)
-	nilval = nilval or NIL
-	for k, v in pairs(upd) do
-		if v == nilval then
-			result[k] = nil
-		else
-			result[k] = v
-		end
-	end
-	return result
+	return inplace_update(copy(tbl), upd, nilval)
 end
 
 return update
