@@ -1,3 +1,5 @@
+local select = _G.select
+
 local function zip(arr, ...)
 	local n = select("#", ...) + 1
 	if n == 1 then

@@ -1,3 +1,5 @@
+local pairs = _G.pairs
+
 local function fold(tbl, f, acc)
 	for k, v in pairs(tbl) do
 		local stop

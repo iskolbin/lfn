@@ -1,3 +1,5 @@
+local select, pairs = _G.select, _G.pairs
+
 local function difference(tbl, ...)
 	local result, n = {}, select("#", ...)
 	for k, v in pairs(tbl) do

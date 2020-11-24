@@ -1,3 +1,5 @@
+local type, pairs = _G.type, _G.pairs
+
 local function deepcopy(v, buffer)
 	if type(v) ~= "table" then
 		return v

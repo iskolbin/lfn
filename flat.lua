@@ -1,3 +1,5 @@
+local type = _G.type
+
 local function doflat(result, v, index, level)
 	if type(v) == "table" and (level == nil or level > 0) then
 		for k = 1, #v do

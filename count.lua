@@ -1,3 +1,5 @@
+local pairs = _G.pairs
+
 local function count(tbl, p)
 	local n = 0
 	if not p then
