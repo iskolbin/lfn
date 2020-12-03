@@ -1,6 +1,6 @@
 --[[
 
- fn - v3.1.0 - public domain Lua functional library
+ fn - v3.2.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -22,6 +22,7 @@
 local functions = {
 	"chars",
 	"chunk",
+	"combinations",
 	"copy",
 	"copyarray",
 	"count",
@@ -36,6 +37,7 @@ local functions = {
 	"filter",
 	"find",
 	"flat",
+	"flatmap",
 	"fold",
 	"foldl",
 	"foldr",
@@ -60,6 +62,7 @@ local functions = {
 	"pack",
 	"partition",
 	"patch",
+	"permutations",
 	"prealloc",
 	"pred",
 	"product",
@@ -112,7 +115,7 @@ end
 local chainfn = {
 	value = function(self)
 		return self[1]
-	end
+	end,
 }
 
 for k, f in pairs(fn) do
@@ -142,6 +145,7 @@ fn.chain =  chain
 fn.L = fn.lambda
 fn.NIL = require(libpath .. "nil")
 fn._ = require(libpath .. "wild")
+fn.___ = fn._.REST
 
 return setmetatable( fn, {__call = function(_, t, ...)
 	local ttype = type(t)

@@ -1,9 +1,12 @@
-local fn = require'fn'
+local fn = require("fn")
 
 local function assertq(a, b)
 	return assert(fn.equal(a, b), fn.str(a) .. ' ~= ' .. fn.str(b))
 end
 
+assertq(fn{x = true, y = true, z = true}:issubset{x = true, y = true, z = true}, true)
+assertq(fn{x = true, y = true}:issubset{x = true, y = true, z = true}, true)
+assertq(fn{x = true, y = true, k = true}:issubset{x = true, y = true, z = true}, false)
 assertq({fn.op.identity(1, 2, 3)}, {1,2,3})
 assertq(fn.op.truth(), true)
 assertq(fn.op.lie(), false)
@@ -181,6 +184,7 @@ assert(fn([[@ - 2]], 2)() == 0)
 assert(fn([[@1 + @2 + @3]], 1, 2)(3) == 6)
 assertq(fn{1, 2, 3, 4}:insert():value(), {1, 2, 3, 4})
 assertq(fn.copy(10), 10)
+assertq(fn.equal({x = 2, y = 3, z = {x = 2}}, {x = 2, y = 3, z = fn._}), true)
 assertq(fn.equal({x = 2, y = 3, z = {x = 2}}, {x = 2, y = 3, z = {x = 4}}), false)
 assertq(fn.equal({x = 2, y = 3, z = {x = 2}}, {x = 2, y = 3, z = {x = {}}}), false)
 assertq(fn.equal({x = 2, y = 3, z = {x = 2}}, {x = 2, y = 4, z = {x = 2}}), false)
@@ -243,3 +247,6 @@ assertq(fn{-1, 2, 3, 4, 5, -6}:min(), -6)
 assertq(fn{-1, 2, 3, 4, 5, -6}:max(), 5)
 assertq(fn{1, 2, 3, 4, 5, 6}:shuffle():max(), 6)
 assertq(fn{3, 4, 5, 6, 7, 1}:sort(fn[[@1 > @2]]):value(), {7, 6, 5, 4, 3, 1})
+assertq(fn{1,2,3}:combinations(2):value(), {{1,2},{1,3},{2,3}})
+assertq(fn{1,2,3}:permutations():value(), {{1,2,3},{2,1,3},{3,1,2},{1,3,2},{2,3,1},{3,2,1}})
+assertq(fn{1,2,3}:combinations(2):flatmap(fn.permutations):value(), {{1,2},{2,1},{1,3},{3,1},{2,3},{3,2}})
