@@ -2,7 +2,7 @@ local pairs = _G.pairs
 
 local libpath = select(1, ...):match(".+%.") or ""
 
-local NIL, copy = require(libpath .. "nil"), require(libpath .. "copy")
+local NIL = require(libpath .. "nil")
 
 local function inplace_update(tbl, upd, nilval)
 	nilval = nilval or NIL
