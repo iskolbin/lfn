@@ -32,6 +32,7 @@ Array transforms
 * `frequencies(array)` return table filled with count of occurencies of specific item, i.e. `frequencies({a,a,b,c}) => {a = 2, b = 1, c = 1}`
 * `fromentries(array)` transforms array with pairs `{key, value}` to table
 * `indexed(array)` returns array filled with array pairs `{index,value}`
+* `inplace_filter(array, p)` filters elements from array inplace which hold predicate `p(value,index,array) => boolean`
 * `inplace_map(array, f)` transforms passed array inplace by mapping with signature `f(value,index,array) => newvalue`
 * `inplace_reverse(array)` reverses array inplace
 * `inplace_shuffle(array)` shuffles array inplace using `math.random` generator

@@ -4,6 +4,7 @@ local function assertq(a, b)
 	return assert(fn.equal(a, b), fn.str(a) .. ' ~= ' .. fn.str(b))
 end
 
+assertq(fn.inplace_filter({1,2,3,4,5}, function(x) return x > 2 end), {3,4,5})
 assertq(fn{x = true, y = true, z = true}:issubset{x = true, y = true, z = true}, true)
 assertq(fn{x = true, y = true}:issubset{x = true, y = true, z = true}, true)
 assertq(fn{x = true, y = true, k = true}:issubset{x = true, y = true, z = true}, false)

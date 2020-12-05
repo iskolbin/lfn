@@ -1,6 +1,6 @@
 --[[
 
- fn - v3.2.0 - public domain Lua functional library
+ fn - v3.2.1 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -46,6 +46,7 @@ local functions = {
 	"insert",
 	"indexed",
 	"indexof",
+	"inplace_filter",
 	"inplace_map",
 	"inplace_reverse",
 	"inplace_shuffle",
