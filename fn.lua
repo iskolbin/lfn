@@ -1,6 +1,6 @@
 --[[
 
- fn - v3.2.1 - public domain Lua functional library
+ fn - v3.2.2 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -50,6 +50,7 @@ local functions = {
 	"inplace_map",
 	"inplace_reverse",
 	"inplace_shuffle",
+	"inplace_sub",
 	"inplace_update",
 	"intersection",
 	"issubset",
