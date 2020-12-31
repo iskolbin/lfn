@@ -1,7 +1,7 @@
 local select = _G.select
 
 local function inplace_exclude(arr, ...)
-	local result, j, toremove, n = {}, 0, {}, #arr
+	local j, toremove, n = 0, {}, #arr
 	for i = 1, select("#", ...) do
 		toremove[select(i, ...)] = true
 	end
