@@ -7,4 +7,3 @@ local function frequencies(arr)
 end
 
 return frequencies
-

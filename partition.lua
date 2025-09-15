@@ -9,7 +9,7 @@ local function partition(arr, p)
 			result2[k] = arr[i]
 		end
 	end
-	return {result1, result2}
+	return { result1, result2 }
 end
 
 return partition

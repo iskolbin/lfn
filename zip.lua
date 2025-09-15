@@ -5,7 +5,7 @@ local function zip(arr, ...)
 	if n == 1 then
 		return arr
 	else
-		local result, lists = {}, {arr, ...}
+		local result, lists = {}, { arr, ... }
 		for i = 1, #lists[1] do
 			local zipped = {}
 			for j = 1, n do

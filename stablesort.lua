@@ -51,7 +51,7 @@ local function insertionsort(arr, first, last, less)
 end
 
 local function merge(arr, workspace, low, middle, high, less)
-	local i, j, k = 1, middle+1, low
+	local i, j, k = 1, middle + 1, low
 	for j_ = low, middle do
 		workspace[i] = arr[j_]
 		i = i + 1
@@ -61,7 +61,7 @@ local function merge(arr, workspace, low, middle, high, less)
 		if k >= j or j > high then
 			break
 		end
-		if less(arr[j], workspace[i])  then
+		if less(arr[j], workspace[i]) then
 			arr[k] = arr[j]
 			j = j + 1
 		else

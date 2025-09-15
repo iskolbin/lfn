@@ -27,9 +27,9 @@ local function str(arg, options, saved, level)
 		options = COMPACT_OPTIONS
 	end
 	if t == "string" then
-		return ('%q'):format( arg )
+		return ("%q"):format(arg)
 	elseif t == "table" then
-		saved, level = saved or {n = 0, recursive = {}}, level or 0
+		saved, level = saved or { n = 0, recursive = {} }, level or 0
 		if saved[arg] then
 			return (options.rec or DEFAULT_OPTIONS.rec)(arg, options, saved, level)
 		else
@@ -48,9 +48,9 @@ local function str(arg, options, saved, level)
 					nt = nt + 1
 					local key = k
 					if type(k) ~= "string" or not k:match(options.id or DEFAULT_OPTIONS.id) then
-						key = "[" .. str(k, options, saved, level+1) .. "]"
+						key = "[" .. str(k, options, saved, level + 1) .. "]"
 					end
-					tret[nt] = ident:rep(level+1) .. key .. kvsep .. str(v, options, saved, level+1)
+					tret[nt] = ident:rep(level + 1) .. key .. kvsep .. str(v, options, saved, level + 1)
 				end
 			end
 			local retc, tretc = concat(ret, ","), concat(tret, "," .. lsep)
@@ -62,7 +62,7 @@ local function str(arg, options, saved, level)
 			return ("{%s%s%s"):format(retc, retc ~= "" and tretc ~= "}" and "," or "", tretc)
 		end
 	else
-		return tostring( arg )
+		return tostring(arg)
 	end
 end
 

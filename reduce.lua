@@ -1,6 +1,6 @@
-local function foldl(arr, f, acc, startindex)
+local function reduce(arr, f, acc, startindex)
 	if acc == nil then
-		return foldl(arr, f, arr[1], 2)
+		return reduce(arr, f, arr[1], 2)
 	end
 	for i = startindex or 1, #arr do
 		local stop
@@ -12,4 +12,4 @@ local function foldl(arr, f, acc, startindex)
 	return acc
 end
 
-return foldl
+return reduce

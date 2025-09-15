@@ -13,7 +13,7 @@ local function inplace_sub(arr, init, limit, step)
 		j = j + 1
 		arr[j] = arr[i]
 	end
-	for i = j+1, n do
+	for i = j + 1, n do
 		arr[i] = nil
 	end
 	return arr

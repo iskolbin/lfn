@@ -1,6 +1,6 @@
 --[[
 
- fn - v3.2.3 - public domain Lua functional library
+ fn - v4.0.0 - public domain Lua functional library
  no warranty implied; use at your own risk
 
  author: Ilya Kolbin (iskolbin@gmail.com)
@@ -18,8 +18,8 @@
 
 --]]
 
-
 local functions = {
+	"at",
 	"chars",
 	"chunk",
 	"combinations",
@@ -38,11 +38,9 @@ local functions = {
 	"find",
 	"flat",
 	"flatmap",
-	"fold",
-	"foldl",
-	"foldr",
 	"frequencies",
 	"fromentries",
+	"get",
 	"insert",
 	"indexed",
 	"indexof",
@@ -56,7 +54,6 @@ local functions = {
 	"intersection",
 	"issubset",
 	"keys",
-	"kvswap",
 	"lambda",
 	"map",
 	"max",
@@ -67,14 +64,17 @@ local functions = {
 	"patch",
 	"permutations",
 	"prealloc",
-	"pred",
+	"predicates",
 	"product",
 	"range",
+	"reduce",
+	"reducekv",
 	"rep",
 	"reverse",
+	"set",
 	"shuffle",
 	"some",
-	"sortedentries",
+	"split",
 	"stablesort",
 	"str",
 	"sub",
@@ -89,8 +89,19 @@ local functions = {
 }
 
 local isreducer = {
-	count = true, equal = true, every = true, max = true, min = true, fold = true, foldl = true,
-	foldr = true, product = true, some = true, str = true, sum = true, unpack = true,
+	at = true,
+	count = true,
+	equal = true,
+	every = true,
+	max = true,
+	min = true,
+	reducekv = true,
+	reduce = true,
+	product = true,
+	some = true,
+	str = true,
+	sum = true,
+	unpack = true,
 }
 
 local unpack = _G.unpack or table.unpack
@@ -102,12 +113,27 @@ local copy = require(libpath .. "copy")
 local fn = {
 	unpack = unpack,
 	concat = table.concat,
-	sort = function(t, ...) t = copy(t); table.sort(t, ...); return t end,
-	inplace_sort = function(t, ...) table.sort(t, ...); return t end,
-	inplace_insert = function(t, ...) table.insert(t, ...); return t end,
-	inplace_remove = function(t, ...) table.remove(t, ...); return t end,
+	sort = function(t, ...)
+		t = copy(t)
+		table.sort(t, ...)
+		return t
+	end,
+	inplace_sort = function(t, ...)
+		table.sort(t, ...)
+		return t
+	end,
+	inplace_insert = function(t, ...)
+		table.insert(t, ...)
+		return t
+	end,
+	inplace_remove = function(t, ...)
+		table.remove(t, ...)
+		return t
+	end,
 	inplace_setmetatable = setmetatable,
-	setmetatable = function(t, ...) return setmetatable(copy(t), ...) end,
+	setmetatable = function(t, ...)
+		return setmetatable(copy(t), ...)
+	end,
 	getmetatable = getmetatable,
 }
 
@@ -138,31 +164,30 @@ for k, f in pairs(fn) do
 	end
 end
 
-local chainmt = {__index = chainfn}
+local chainmt = { __index = chainfn }
 
 local function chain(self)
-	return setmetatable({self}, chainmt)
+	return setmetatable({ self }, chainmt)
 end
 
-fn.chain =  chain
+fn.chain = chain
 fn.L = fn.lambda
-fn.NIL = require(libpath .. "nil")
-fn._ = require(libpath .. "wild")
-fn.___ = fn._.REST
+fn.DEL = require(libpath .. "internal").DEL
+fn._ = require(libpath .. "internal").WILD
+fn.p = fn.predicates
 
-return setmetatable( fn, {__call = function(_, t, ...)
-	local ttype = type(t)
-	if ttype == "table" then
-		return fn.chain(t, ...)
-	elseif ttype == "string" then
-		return fn.lambda(t, ...)
-	elseif ttype == "number" then
-		return fn.chain(fn.range(t, ...))
-	else
-		error("fn accepts table, string or 1,2 or 3 numbers as the arguments")
-	end
-end})
-
+return setmetatable(fn, {
+	__call = function(_, t, ...)
+		local ttype = type(t)
+		if ttype == "table" then
+			return fn.chain(t)
+		elseif ttype == "string" then
+			return fn.lambda(t, ...)
+		else
+			error("fn accepts table for wrapping in chain calls, strings for lambdas")
+		end
+	end,
+})
 
 --[[
 ------------------------------------------------------------------------------

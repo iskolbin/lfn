@@ -6,7 +6,7 @@ local function inplace_filter(arr, p)
 			arr[j] = arr[i]
 		end
 	end
-	for i = j+1, n do
+	for i = j + 1, n do
 		arr[i] = nil
 	end
 	return arr

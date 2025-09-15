@@ -1,5 +1,5 @@
 local libpath = select(1, ...):match(".+%.") or ""
-local _ = require(libpath .. "wild")
+local _ = require(libpath .. "internal").WILD
 
 local type, pairs = _G.type, _G.pairs
 

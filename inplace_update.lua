@@ -1,18 +1,5 @@
-local pairs = _G.pairs
-
-local libpath = select(1, ...):match(".+%.") or ""
-
-local NIL = require(libpath .. "nil")
-
-local function inplace_update(tbl, upd, nilval)
-	nilval = nilval or NIL
-	for k, v in pairs(upd) do
-		if v == nilval then
-			tbl[k] = nil
-		else
-			tbl[k] = v
-		end
-	end
+local function inplace_update(tbl, k, updfn, ...)
+	tbl[k] = updfn(tbl[k], k, tbl, ...)
 	return tbl
 end
 

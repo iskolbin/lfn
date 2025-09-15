@@ -1,3 +1,5 @@
+local assert, type, floor = _G.assert, _G.type, math.floor
+
 local function indexof(arr, v, cmp)
 	if not cmp then
 		for i = 1, #arr do
@@ -6,16 +8,17 @@ local function indexof(arr, v, cmp)
 			end
 		end
 	else
-		assert(type(cmp) == "function",
-			"3rd argument should be nil for linear search or comparator for binary search if array is sorted")
+		assert(
+			type(cmp) == "function",
+			"3rd argument should be nil for linear search or comparator for binary search if passed array is sorted"
+		)
 		local init, limit = 1, #arr
-		local floor = math.floor
 		while init <= limit do
-			local mid = floor(0.5*(init+limit))
-			local v_ = arr[mid]
-			if v == v_ then
+			local mid = floor((init + limit) / 2)
+			local result = cmp(v, arr[mid])
+			if result == 0 then
 				return mid
-			elseif cmp(v, v_) then
+			elseif result < 0 then
 				limit = mid - 1
 			else
 				init = mid + 1
