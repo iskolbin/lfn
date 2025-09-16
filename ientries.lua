@@ -1,4 +1,4 @@
-local function indexed(arr)
+local function ientries(arr)
 	local result = {}
 	for i = 1, #arr do
 		result[i] = { i, arr[i] }
@@ -6,4 +6,4 @@ local function indexed(arr)
 	return result
 end
 
-return indexed
+return ientries

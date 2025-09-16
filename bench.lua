@@ -22,3 +22,15 @@ for _ = 1, 1e6 do
 	y = y ^ 2
 end
 print("native", (os.clock() - t) / 1e6)
+
+-- added to test auto inplacing
+local tbl = {}
+for i = 1, 10000 do
+	tbl[i] = math.random()
+end
+print(
+	"chain call",
+	running_time(1e4, function()
+		return fn(tbl):reverse():filter(fn([[@>0.5]])):map(fn([[@+0.25]])):shuffle():sub(10):value()
+	end)
+)

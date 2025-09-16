@@ -41,12 +41,13 @@ local functions = {
 	"frequencies",
 	"fromentries",
 	"get",
+	"ientries",
 	"insert",
-	"indexed",
 	"indexof",
 	"inplace_exclude",
 	"inplace_filter",
 	"inplace_map",
+	"inplace_patch",
 	"inplace_reverse",
 	"inplace_shuffle",
 	"inplace_sub",
@@ -63,7 +64,6 @@ local functions = {
 	"partition",
 	"patch",
 	"permutations",
-	"prealloc",
 	"predicates",
 	"product",
 	"range",
@@ -88,7 +88,7 @@ local functions = {
 	"zip",
 }
 
-local isreducer = {
+local is_reducer = {
 	at = true,
 	count = true,
 	equal = true,
@@ -102,6 +102,18 @@ local isreducer = {
 	str = true,
 	sum = true,
 	unpack = true,
+}
+
+local inplace_alternatives = {
+	exclude = "inplace_exclude",
+	filter = "inplace_filter",
+	map = "inplace_map",
+	patch = "inplace_patch",
+	reverse = "inplace_reverse",
+	shuffle = "inplace_shuffle",
+	sub = "inplace_sub",
+	update = "inplace_update",
+	sort = "inplace_sort",
 }
 
 local unpack = _G.unpack or table.unpack
@@ -148,13 +160,21 @@ local chainfn = {
 }
 
 for k, f in pairs(fn) do
-	if isreducer[k] then
+	if is_reducer[k] then
 		chainfn[k] = function(self, ...)
 			return f(self[1], ...)
 		end
 	else
 		chainfn[k] = function(self, ...)
-			self[1], self[2] = f(self[1], ...)
+			local f_ = f
+
+			if self[3] then
+				f_ = fn[inplace_alternatives[k]] or f
+			else
+				self[3] = true
+			end
+
+			self[1], self[2] = f_(self[1], ...)
 			if type(self[1]) ~= "table" then
 				return self[1], self[2]
 			else

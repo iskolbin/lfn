@@ -171,7 +171,7 @@ assertq(fn.indexof({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, 7, fn.lt), 7)
 assertq(fn.indexof({ 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 }, 7, fn.gt), 4)
 assertq(fn.find({ "x", "y", "z", "aa", "b", "c" }, fn([[@ == "aa"]])), "aa")
 assertq(fn.find({ { 1 }, { 2 }, { 3 }, { 4 } }, fn("@[1] == 3")), { 3 })
-assertq(fn.indexed({ 2, 3, 4 }), { { 1, 2 }, { 2, 3 }, { 3, 4 } })
+assertq(fn.ientries({ 2, 3, 4 }), { { 1, 2 }, { 2, 3 }, { 3, 4 } })
 assertq(fn.sort(fn.entries({ x = 2, y = 3, z = 4 }), fn("@1[1] < @2[1]")), { { "x", 2 }, { "y", 3 }, { "z", 4 } })
 assertq(fn.fromentries({ { "x", 2 }, { "y", 3 }, { "z", 4 } }), { x = 2, y = 3, z = 4 })
 assertq(fn.unique({ 1, 2, 3, 1, 2, 3, 1, 4, 5 }), { 1, 2, 3, 4, 5 })
@@ -331,12 +331,16 @@ assertq(fn({ 1, 2, 3, 4, 5 }):insert(6):value(), { 1, 2, 3, 4, 5, 6 })
 assertq(fn.op.mod(5, 2), 1)
 assertq(fn({ 1, 2, 33, 4, 5 }):get(3), 33)
 assertq(fn({ 1, { 2, { 3, k = { x = 6 } } } }):get(2, 2, "k", "x"), 6)
-assertq(fn({ 1, 2, 3, 4, 5 }):set(3, 33), { { 1, 2, 33, 4, 5 } })
-assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "y", 6), { { 1, 2, { x = { y = 6 } } } })
-assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "y", fn.DEL), { { 1, 2, { x = {} } } })
-assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "z", 55), { { 1, 2, { x = { y = 5, z = 55 } } } })
-assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "z", fn.DEL), { { 1, 2, { x = { y = 5 } } } })
-assertq(fn({ 1, 2, 3, 4, 5 }):set(1), { { 1, 2, 3, 4, 5 } })
+assertq(fn({ 1, 2, 3, 4, 5 }):set(3, 33):value(), { 1, 2, 33, 4, 5 })
+assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "y", 6):value(), { 1, 2, { x = { y = 6 } } })
+assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "y", fn.DEL):value(), { 1, 2, { x = {} } })
+assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "z", 55):value(), { 1, 2, { x = { y = 5, z = 55 } } })
+assertq(fn({ 1, 2, { x = { y = 5 } } }):set(3, "x", "z", fn.DEL):value(), { 1, 2, { x = { y = 5 } } })
+assertq(fn({ 1, 2, 3, 4, 5 }):set(1):value(), { 1, 2, 3, 4, 5 })
+assertq(
+	fn({ x = 2, y = { z = 4, k = 6 } }):inplace_patch({ y = { z = 5, k = fn.DEL, u = 7 } }):value(),
+	{ x = 2, y = { z = 5, u = 7 } }
+)
 
 if table_pack then
 	table.pack = table_pack
